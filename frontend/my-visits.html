@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>My Visits — Amoré</title>
+	<meta name="description" content="Your appointments at Amoré — look up your visits by email, reschedule or cancel." />
+	<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23E11D48'/%3E%3Cpath d='M9 24 L16 7 L23 24' fill='none' stroke='%23ffffff' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='16' cy='19.2' r='2.7' fill='%23ffffff'/%3E%3C/svg%3E" />
+	<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+	<a class="skip-link" href="#main">Skip to content</a>
+
+	<header class="site-header" data-header>
+		<div class="container header-inner">
+			<a class="brand" href="index.html" aria-label="Amoré — home">
+				<svg class="brand-mark" viewBox="0 0 32 32" width="34" height="34" aria-hidden="true" focusable="false">
+					<rect width="32" height="32" rx="8" fill="#E11D48"/>
+					<path d="M9 24 L16 7 L23 24" fill="none" stroke="#ffffff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+					<circle cx="16" cy="19.2" r="2.7" fill="#ffffff"/>
+				</svg>
+				<span class="brand-name">Amor<span class="brand-name-accent">é</span></span>
+			</a>
+
+			<nav class="site-nav" data-nav aria-label="Main navigation">
+				<ul>
+					<li><a href="index.html">Home</a></li>
+					<li><a href="services.html">Services</a></li>
+					<li><a href="stylists.html">Stylists</a></li>
+					<li><a href="about.html">About</a></li>
+					<li><a href="my-visits.html" aria-current="page">My Visits</a></li>
+				</ul>
+				<a class="nav-signup" href="signup.html">Sign up</a>
+				<a class="btn btn-ghost nav-login" href="login.html">Log in</a>
+				<a class="btn btn-accent nav-cta" href="booking.html">Book now</a>
+			</nav>
+
+			<button class="nav-toggle" data-nav-toggle aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
+				<span></span><span></span>
+			</button>
+		</div>
+	</header>
+
+	<main id="main">
+
+		<section class="section">
+			<div class="container">
+				<div class="booking-wrap">
+
+					<p class="eyebrow reveal">Your visits</p>
+					<h1 class="page-title reveal">My Visits</h1>
+					<p class="section-note reveal">Look up your appointments by email — reschedule or cancel any upcoming visit.</p>
+
+					<!-- email lookup (mirrors GET /api/bookings?email=) -->
+					<div class="booking-card">
+						<form class="visits-lookup" data-lookup-form>
+							<label class="visually-hidden" for="visits-email">Email address</label>
+							<input type="email" id="visits-email" data-lookup-email placeholder="you@example.com" autocomplete="email" maxlength="160" required />
+							<button class="btn btn-accent" type="submit">Find my visits</button>
+						</form>
+						<p class="field-error" data-lookup-error hidden></p>
+						<p class="booking-hint">Enter the email you booked with — or make a booking on the booking page and look it up here.</p>
+					</div>
+
+					<!-- results -->
+					<div data-visits-result hidden>
+						<h2 class="visits-section-title" data-result-title>Upcoming</h2>
+						<div class="visits-list" data-upcoming-list></div>
+
+						<h2 class="visits-section-title">Past visits</h2>
+						<div class="visits-list" data-past-list></div>
+					</div>
+
+					<!-- honest empty state -->
+					<div class="booking-card" data-visits-empty hidden>
+						<p class="confirm-text">No visits found for that email.</p>
+						<p class="booking-hint">Booked with a different email? Try that one — or make a booking on the booking page.</p>
+						<p><a class="btn btn-ghost" href="booking.html">Book an appointment</a></p>
+					</div>
+
+					<!-- status live region -->
+					<p class="visually-hidden" data-visits-status role="status" aria-live="polite"></p>
+
+				</div>
+			</div>
+		</section>
+
+	</main>
+
+	<footer class="site-footer">
+		<div class="container footer-inner">
+			<div class="footer-brand">
+				<a class="brand brand-light" href="index.html" aria-label="Amoré — home">
+					<svg class="brand-mark" viewBox="0 0 32 32" width="34" height="34" aria-hidden="true" focusable="false">
+						<rect width="32" height="32" rx="8" fill="#E11D48"/>
+						<path d="M9 24 L16 7 L23 24" fill="none" stroke="#ffffff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+						<circle cx="16" cy="19.2" r="2.7" fill="#ffffff"/>
+					</svg>
+					<span class="brand-name">Amor<span class="brand-name-accent">é</span></span>
+				</a>
+				<p class="footer-note">A unisex salon — cuts, colour and care for everyone.</p>
+			</div>
+			<nav class="footer-col" aria-label="Footer">
+				<p class="footer-heading">Explore</p>
+				<ul>
+					<li><a href="index.html">Home</a></li>
+					<li><a href="services.html">Services</a></li>
+					<li><a href="stylists.html">Stylists</a></li>
+					<li><a href="about.html">About</a></li>
+					<li><a href="my-visits.html">My Visits</a></li>
+				</ul>
+			</nav>
+			<div class="footer-col">
+				<p class="footer-heading">Salon</p>
+				<ul>
+					<li><a href="booking.html">Book an appointment</a></li>
+					<li><a href="index.html#reviews">Reviews</a></li>
+				</ul>
+			</div>
+			<p class="footer-legal">&copy; 2026 Amoré. All rights reserved.</p>
+		</div>
+	</footer>
+
+	<script src="js/api.js"></script>
+	<script src="js/sample-data.js"></script>
+	<script src="js/main.js"></script>
+	<script src="js/visits.js"></script>
+</body>
+</html>

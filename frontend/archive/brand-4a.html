@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Amoré — Brand Board (Phase 4A)</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet" />
+	<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+	<main class="board">
+		<span class="board-banner">🎨 Phase 4A · Branding &amp; Visual Direction — preview only</span>
+		<h1>Amoré</h1>
+		<p class="board-intro">
+			Spanish-inspired, unisex salon brand. Cute + modern + premium-ish:
+			romantic rose, warm peach, quiet sage — on cream, with espresso ink
+			(never pure black, never dark-gold). This board is the single source
+			of truth for every later phase.
+		</p>
+
+		<!-- ===================== LOGO ===================== -->
+		<section class="board-section">
+			<h2>Logo lockups</h2>
+			<p class="section-sub">Scissors ✂ as the mark (salon-native), Fraunces wordmark, tagline "unisex salon".</p>
+			<div class="board-grid logo-grid">
+				<div class="logo-card on-light">
+					<span class="logo accent">
+						<span class="logo-mark" aria-hidden="true">✂</span>Amoré
+					</span>
+					<p class="usage">Primary · light surfaces</p>
+				</div>
+				<div class="logo-card on-dark">
+					<span class="logo on-dark">
+						<span class="logo-mark" aria-hidden="true">✂</span>Amoré
+					</span>
+					<p class="usage">Footer / dark ink surfaces</p>
+				</div>
+			</div>
+			<div class="favicon-row board-section">
+				<div class="fav fav-64" aria-hidden="true">A</div>
+				<div class="fav fav-32" aria-hidden="true">A</div>
+				<div class="fav fav-16" aria-hidden="true">A</div>
+				<p class="fav-note">
+					Favicon: gradient tile + "A" monogram, legible at 16px.
+					Ship as inline SVG data-URI in index.html (4B) — no image file needed.
+				</p>
+			</div>
+		</section>
+
+		<!-- ===================== PALETTE ===================== -->
+		<section class="board-section">
+			<h2>Palette</h2>
+			<p class="section-sub">Rose leads, peach warms, sage balances (the unisex voice), cream carries it all.</p>
+			<div class="board-grid swatch-grid">
+				<div class="swatch"><div class="chip" style="background:#d9768f"></div>
+					<div class="meta"><p class="name">Rose 500</p><p class="hex">#D9768F · primary</p></div></div>
+				<div class="swatch"><div class="chip" style="background:#e58aa6"></div>
+					<div class="meta"><p class="name">Rose 400</p><p class="hex">#E58AA6</p></div></div>
+				<div class="swatch"><div class="chip" style="background:#fbe9ee"></div>
+					<div class="meta"><p class="name">Rose 100</p><p class="hex">#FBE9EE · tints</p></div></div>
+				<div class="swatch"><div class="chip" style="background:#e8a06b"></div>
+					<div class="meta"><p class="name">Peach 500</p><p class="hex">#E8A06B · accent</p></div></div>
+				<div class="swatch"><div class="chip" style="background:#f7c9a8"></div>
+					<div class="meta"><p class="name">Peach 300</p><p class="hex">#F7C9A8</p></div></div>
+				<div class="swatch"><div class="chip" style="background:#9db8a2"></div>
+					<div class="meta"><p class="name">Sage 400</p><p class="hex">#9DB8A2 · support</p></div></div>
+				<div class="swatch"><div class="chip" style="background:#fffbf5"></div>
+					<div class="meta"><p class="name">Cream</p><p class="hex">#FFFBF5 · page bg</p></div></div>
+				<div class="swatch"><div class="chip" style="background:#43382f"></div>
+					<div class="meta"><p class="name">Espresso Ink</p><p class="hex">#43382F · text</p></div></div>
+			</div>
+		</section>
+
+		<!-- ===================== TYPE ===================== -->
+		<section class="board-section">
+			<h2>Typography</h2>
+			<div class="board-grid type-grid">
+				<div class="type-card">
+					<p class="type-sample-display">Amoré — romantic display</p>
+					<p class="type-meta"><strong>Fraunces</strong> 500/600 · headings, logo, prices</p>
+				</div>
+				<div class="type-card">
+					<p class="type-sample-body">Book your glow-up — friendly, clear, never stiff.</p>
+					<p class="type-meta"><strong>Nunito</strong> 400/700/800 · body, buttons, labels</p>
+				</div>
+			</div>
+		</section>
+
+		<!-- ===================== VOICE + BUTTONS ===================== -->
+		<section class="board-section">
+			<h2>Voice &amp; buttons</h2>
+			<p class="section-sub">Warm &amp; friendly, unisex — everyone's welcome, nobody is typecast.</p>
+			<div class="board-grid voice-grid">
+				<div class="voice-card"><p>Book your glow-up ✨</p><span>hero CTA</span></div>
+				<div class="voice-card"><p>Pick your artist 💫</p><span>stylist step</span></div>
+				<div class="voice-card"><p>You're booked — see you soon 🎀</p><span>success</span></div>
+			</div>
+			<div class="btn-row board-section">
+				<button class="btn btn-primary" type="button">Book Appointment</button>
+				<button class="btn btn-accent" type="button">Explore Services</button>
+				<button class="btn btn-ghost" type="button">My Visits</button>
+			</div>
+		</section>
+
+		<footer class="board-footer">
+			Phase 4A · awaiting approval → 4B Header &amp; Navigation starts only after you say yes.
+		</footer>
+	</main>
+</body>
+</html>

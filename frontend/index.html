@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Amoré — a unisex salon</title>
+	<meta name="description" content="Amoré — a unisex salon. Cuts, colour and care for everyone. Book your appointment online." />
+	<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23E11D48'/%3E%3Cpath d='M9 24 L16 7 L23 24' fill='none' stroke='%23ffffff' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='16' cy='19.2' r='2.7' fill='%23ffffff'/%3E%3C/svg%3E" />
+	<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+	<a class="skip-link" href="#main">Skip to content</a>
+
+	<!-- ================= HEADER / NAV (concept: sticky, blur on scroll) ================= -->
+	<header class="site-header" data-header>
+		<div class="container header-inner">
+			<!-- Amoré brand lockup: A-dot mark (abstract scissor pivot) + wordmark -->
+			<a class="brand" href="#top" aria-label="Amoré — home">
+				<svg class="brand-mark" viewBox="0 0 32 32" width="34" height="34" aria-hidden="true" focusable="false">
+					<rect width="32" height="32" rx="8" fill="#E11D48"/>
+					<path d="M9 24 L16 7 L23 24" fill="none" stroke="#ffffff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+					<circle cx="16" cy="19.2" r="2.7" fill="#ffffff"/>
+				</svg>
+				<span class="brand-name">Amor<span class="brand-name-accent">é</span></span>
+			</a>
+
+			<nav class="site-nav" data-nav aria-label="Main navigation">
+				<ul>
+					<li><a href="index.html" aria-current="page">Home</a></li>
+					<li><a href="services.html">Services</a></li>
+					<li><a href="stylists.html">Stylists</a></li>
+					<li><a href="about.html">About</a></li>
+					<li><a href="my-visits.html">My Visits</a></li>
+				</ul>
+				<!-- Login/Signup UI arrives with real authentication (future phase) -->
+				<a class="nav-signup" href="signup.html">Sign up</a>
+				<a class="btn btn-ghost nav-login" href="login.html">Log in</a>
+				<a class="btn btn-accent nav-cta" href="booking.html">Book now</a>
+			</nav>
+
+			<button class="nav-toggle" data-nav-toggle aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
+				<span></span><span></span>
+			</button>
+		</div>
+	</header>
+
+	<main id="main">
+
+		<!-- ================= HERO (concept: split, offset photo cards; NO fake availability) ================= -->
+		<section class="hero" id="top">
+			<div class="container hero-inner">
+				<div class="hero-copy">
+					<p class="eyebrow reveal">Unisex salon</p>
+					<!-- hero headline (approved tagline) -->
+					<h1 class="reveal">Where every look <span class="accent-word">feels like love.</span></h1>						<p class="hero-sub reveal">Cuts, colour and care for everyone — booked in minutes.</p>
+					<div class="hero-actions reveal">
+						<a class="btn btn-accent btn-lg" href="booking.html">Book appointment</a>
+						<a class="btn btn-ghost btn-lg" href="#services">Explore services <span aria-hidden="true">&rarr;</span></a>
+					</div>
+				</div>
+				<div class="hero-visual reveal" aria-hidden="true">
+					<!-- hero visual blocks (interim) -->
+					<div class="hero-card hero-card-a"></div>
+					<div class="hero-card hero-card-b"></div>
+				</div>
+			</div>
+		</section>
+
+		<!-- ================= SERVICES ================= -->
+		<section class="section" id="services">
+			<div class="container">
+				<p class="eyebrow reveal">What we do</p>
+				<h2 class="reveal">Services</h2>
+				<p class="section-note reveal">Cuts, colour, styling and care — pick a category to filter.</p>
+
+				<!-- category filter chips -->
+				<div class="chip-row reveal" data-service-chips role="group" aria-label="Filter services by category">
+					<button class="chip is-active" type="button" data-category-chip="All" aria-pressed="true">All</button>
+					<button class="chip" type="button" data-category-chip="Haircut" aria-pressed="false">Haircut</button>
+					<button class="chip" type="button" data-category-chip="Beard" aria-pressed="false">Beard</button>
+					<button class="chip" type="button" data-category-chip="Colour" aria-pressed="false">Colour</button>
+					<button class="chip" type="button" data-category-chip="Styling" aria-pressed="false">Styling</button>
+					<button class="chip" type="button" data-category-chip="Treatment" aria-pressed="false">Treatment</button>
+				</div>
+
+				<!-- screen-reader announcements for filter results / book clicks -->
+				<p class="visually-hidden" data-services-status role="status" aria-live="polite"></p>
+
+				<!-- cards render here (js/services.js) -->
+				<div class="services-grid" data-services-grid></div>
+
+				<!-- shown when a category has no services -->
+				<div class="empty-state" data-services-empty hidden>
+					<p class="empty-state-icon" aria-hidden="true">✂</p>
+					<p class="empty-state-title">No services in this category yet.</p>
+					<p class="empty-state-sub">Try another category — or view them all.</p>
+				</div>
+			</div>
+		</section>
+
+		<!-- ================= WHY CHOOSE US ================= -->
+		<section class="section section-alt" id="why-us">
+			<div class="container">
+				<p class="eyebrow reveal">Why Amoré</p>
+				<h2 class="reveal">Why choose us</h2>
+
+				<div class="feature-grid">
+					<article class="feature-card reveal">
+						<span class="feature-icon" aria-hidden="true">✂</span>
+						<h3>Professional stylists</h3>
+						<p>Skilled artists who listen first and cut with intention — every visit, every hair type.</p>
+					</article>
+					<article class="feature-card reveal">
+						<span class="feature-icon" aria-hidden="true"> ◈</span>
+						<h3>Services for every need</h3>
+						<p>Cuts, colour, styling and care — a full menu for different hair needs and styles.</p>
+					</article>
+					<article class="feature-card reveal">
+						<span class="feature-icon" aria-hidden="true">◔</span>
+						<h3>Easy appointments</h3>
+						<p>Book online in minutes and walk into a chair that's ready for you.</p>
+					</article>
+					<article class="feature-card reveal">
+						<span class="feature-icon" aria-hidden="true">✎</span>
+						<h3>Personalized service</h3>
+						<p>Your hair, your call — honest advice and a finish that suits your everyday.</p>
+					</article>
+					<article class="feature-card reveal">
+						<span class="feature-icon" aria-hidden="true">✦</span>
+						<h3>A salon for everyone</h3>
+						<p>Clean, calm and welcoming — a unisex space where anyone can feel at ease.</p>
+					</article>
+				</div>
+
+				<div class="know-more reveal">
+					<a class="btn btn-ghost" href="about.html">Know more about us</a>
+				</div>
+			</div>
+		</section>
+
+		<!-- ================= STYLISTS ================= -->
+		<section class="section section-alt" id="stylists">
+			<div class="container">
+				<p class="eyebrow reveal">Our team</p>
+				<h2 class="reveal">Stylists</h2>
+				<p class="section-note reveal">Three artists, one standard — sharp work for every hair type.</p>
+
+				<!-- cards render here (js/stylists.js) -->
+				<div class="stylists-grid" data-stylists-grid></div>
+			</div>
+		</section>
+
+		<!-- ================= REVIEWS (homepage only) ================= -->
+		<section class="section" id="reviews">
+			<div class="container">
+				<p class="eyebrow reveal">Kind words</p>
+				<h2 class="reveal">What our guests say</h2>
+				<p class="section-note reveal">A glimpse of the Amoré experience.</p>
+			</div>
+			<div class="container" data-reviews-region>
+				<!-- preview banner: sample content until the real Reviews API connects -->
+				<p class="preview-note reveal" role="note">Preview — sample reviews shown while we prepare real guest stories.</p>
+				<div class="reviews-viewport reveal">
+					<div class="reviews-track" data-reviews-track></div>
+				</div>
+			</div>
+		</section>
+
+		<!-- ================= ABOUT STRIP / CTA ================= -->
+		<section class="section about-strip">
+			<div class="container about-strip-inner">
+				<div class="about-strip-copy">
+					<p class="eyebrow reveal">About Amoré</p>
+					<h2 class="reveal">A unisex salon, built around you</h2>
+					<p class="section-note reveal">One studio where anyone can get sharp, healthy hair — honest advice, calm chairs, zero attitude.</p>
+					<a class="text-link reveal" href="about.html">Know more about us →</a>
+				</div>
+			</div>
+		</section>
+
+		<!-- ================= BOOKING CTA ================= -->
+		<section class="cta-banner" id="booking">
+			<div class="container">
+				<h2 class="reveal">Ready when you are.</h2>
+				<p class="reveal">Online booking opens soon.</p>
+				<a class="btn btn-light btn-lg reveal" href="#services">Explore services</a>
+			</div>
+		</section>
+
+	</main>
+
+	<!-- ================= FOOTER ================= -->
+	<footer class="site-footer">
+		<div class="container footer-inner">
+			<div class="footer-brand">
+				<a class="brand brand-light" href="#top" aria-label="Amoré — back to top">
+					<svg class="brand-mark" viewBox="0 0 32 32" width="34" height="34" aria-hidden="true" focusable="false">
+						<rect width="32" height="32" rx="8" fill="#E11D48"/>
+						<path d="M9 24 L16 7 L23 24" fill="none" stroke="#ffffff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+						<circle cx="16" cy="19.2" r="2.7" fill="#ffffff"/>
+					</svg>
+					<span class="brand-name">Amor<span class="brand-name-accent">é</span></span>
+				</a>
+				<p class="footer-note">A unisex salon — cuts, colour and care for everyone.</p>
+			</div>
+			<nav class="footer-col" aria-label="Footer">
+				<p class="footer-heading">Explore</p>
+				<ul>
+					<li><a href="index.html">Home</a></li>
+					<li><a href="services.html">Services</a></li>
+					<li><a href="stylists.html">Stylists</a></li>
+					<li><a href="about.html">About</a></li>
+					<li><a href="my-visits.html">My Visits</a></li>
+				</ul>
+			</nav>
+			<div class="footer-col">
+				<p class="footer-heading">Salon</p>
+				<ul>
+					<li><a href="booking.html">Book an appointment</a></li>
+					<li><a href="index.html#reviews">Reviews</a></li>
+				</ul>
+			</div>
+			<p class="footer-legal">&copy; 2026 Amoré. All rights reserved.</p>
+		</div>
+	</footer>
+
+	<script src="js/api.js"></script>
+	<script src="js/sample-data.js"></script>
+	<script src="js/main.js"></script>
+	<script src="js/services.js"></script>
+	<script src="js/stylists.js"></script>
+	<script src="js/reviews.js"></script>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Book an appointment — Amoré</title>
+	<meta name="description" content="Book your Amoré appointment online — pick a service, stylist, date and time in six simple steps." />
+	<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23E11D48'/%3E%3Cpath d='M9 24 L16 7 L23 24' fill='none' stroke='%23ffffff' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='16' cy='19.2' r='2.7' fill='%23ffffff'/%3E%3C/svg%3E" />
+	<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+	<a class="skip-link" href="#main">Skip to content</a>
+
+	<header class="site-header" data-header>
+		<div class="container header-inner">
+			<a class="brand" href="index.html" aria-label="Amoré — home">
+				<svg class="brand-mark" viewBox="0 0 32 32" width="34" height="34" aria-hidden="true" focusable="false">
+					<rect width="32" height="32" rx="8" fill="#E11D48"/>
+					<path d="M9 24 L16 7 L23 24" fill="none" stroke="#ffffff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+					<circle cx="16" cy="19.2" r="2.7" fill="#ffffff"/>
+				</svg>
+				<span class="brand-name">Amor<span class="brand-name-accent">é</span></span>
+			</a>
+
+			<nav class="site-nav" data-nav aria-label="Main navigation">
+				<ul>
+					<li><a href="index.html">Home</a></li>
+					<li><a href="services.html">Services</a></li>
+					<li><a href="stylists.html">Stylists</a></li>
+					<li><a href="about.html">About</a></li>
+					<li><a href="my-visits.html">My Visits</a></li>
+				</ul>
+				<a class="nav-signup" href="signup.html">Sign up</a>
+				<a class="btn btn-ghost nav-login" href="login.html">Log in</a>
+				<a class="btn btn-accent nav-cta" href="booking.html" aria-current="page">Book now</a>
+			</nav>
+
+			<button class="nav-toggle" data-nav-toggle aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
+				<span></span><span></span>
+			</button>
+		</div>
+	</header>
+
+	<main id="main">
+
+		<section class="section">
+			<div class="container">
+				<div class="booking-wrap">
+
+					<p class="eyebrow reveal">Book your visit</p>
+					<h1 class="page-title reveal">Book an appointment</h1>
+					<p class="section-note reveal">Six quick steps — pick, choose, confirm.</p>
+
+					<!-- progress bar (roles = tablist semantics kept simple for SRs) -->
+					<ol class="booking-steps" data-steps aria-label="Booking progress">
+						<li class="booking-step is-active" data-step-tab="1"><span class="step-num">1</span><span class="step-label">Service</span></li>
+						<li class="booking-step" data-step-tab="2"><span class="step-num">2</span><span class="step-label">Stylist</span></li>
+						<li class="booking-step" data-step-tab="3"><span class="step-num">3</span><span class="step-label">Date &amp; time</span></li>
+						<li class="booking-step" data-step-tab="4"><span class="step-num">4</span><span class="step-label">Details</span></li>
+						<li class="booking-step" data-step-tab="5"><span class="step-num">5</span><span class="step-label">Review</span></li>
+						<li class="booking-step" data-step-tab="6"><span class="step-num">6</span><span class="step-label">Confirmed</span></li>
+					</ol>
+
+					<!-- the whole wizard lives in one card; panels swap inside -->
+					<div class="booking-card" data-wizard aria-live="polite">
+
+						<!-- STEP 1: SERVICE -->
+						<section class="booking-panel" data-panel="1" aria-labelledby="s1-h">
+							<h2 id="s1-h">Pick your service</h2>
+							<p class="booking-hint">All 8 salon services — durations and prices are the real menu.</p>
+							<div class="booking-options" data-service-options></div>
+						</section>
+
+						<!-- STEP 2: STYLIST -->
+						<section class="booking-panel" data-panel="2" hidden aria-labelledby="s2-h">
+							<h2 id="s2-h">Pick your artist</h2>
+							<p class="booking-hint">Only stylists who offer <strong data-chosen-service>—</strong>.</p>
+						<div class="booking-options" data-stylist-options></div>
+					</section>
+
+						<!-- STEP 3: DATE & TIME -->
+						<section class="booking-panel" data-panel="3" hidden aria-labelledby="s3-h">
+							<h2 id="s3-h">Pick date &amp; time</h2>
+							<div class="form-field">
+								<label for="booking-date">Date</label>
+								<input type="date" id="booking-date" data-date required />
+								<p class="field-error" data-date-error hidden></p>
+							</div>
+							<p class="field-label">Time</p>
+							<p class="booking-hint" data-slots-hint>Choose a date to see free times.</p>
+							<div class="slot-grid" data-slot-grid role="group" aria-label="Available start times"></div>
+							<p class="field-error" data-slot-error hidden></p>
+						</section>
+
+						<!-- STEP 4: DETAILS -->
+						<section class="booking-panel" data-panel="4" hidden aria-labelledby="s4-h">
+							<h2 id="s4-h">Your details</h2>
+							<div class="form-field">
+								<label for="booking-name">Full name</label>
+								<input type="text" id="booking-name" name="name" data-name autocomplete="name" maxlength="120" required />
+								<p class="field-error" data-name-error hidden></p>
+							</div>
+							<div class="form-field">
+								<label for="booking-email">Email</label>
+								<input type="email" id="booking-email" name="email" data-email autocomplete="email" maxlength="160" required />
+								<p class="field-error" data-email-error hidden></p>
+							</div>
+							<div class="form-field">
+								<label for="booking-phone">Phone</label>								<input type="tel" id="booking-phone" name="phone" data-phone autocomplete="tel" maxlength="20" />
+							</div>
+							<div class="form-field">
+								<label for="booking-notes">Notes (optional)</label>
+								<textarea id="booking-notes" data-notes rows="3" maxlength="500"></textarea>
+							</div>
+						</section>
+
+						<!-- STEP 5: REVIEW -->
+						<section class="booking-panel" data-panel="5" hidden aria-labelledby="s5-h">
+						<h2 id="s5-h">Review your visit</h2>
+						<dl class="review-list">
+								<dt>Service</dt><dd><span data-review-service>—</span> <button class="review-edit" type="button" data-edit="1">Edit</button></dd>
+								<dt>Stylist</dt><dd><span data-review-stylist>—</span> <button class="review-edit" data-edit="2">Edit</button></dd>
+								<dt>Date &amp; time</dt><dd><span data-review-when>—</span> <button class="review-edit" data-edit="3">Edit</button></dd>
+								<dt>Name</dt><dd><span data-review-name>—</span> <button class="review-edit" data-edit="4">Edit</button></dd>
+								<dt>Email</dt><dd><span data-review-email>—</span></dd>
+								<dt>Phone</dt><dd><span data-review-phone>—</span></dd>
+								<dt>Notes</dt><dd><span data-review-notes>—</span></dd>
+							</dl>
+							<p class="field-error" data-review-error hidden></p>
+						</section>
+
+						<!-- STEP 6: SAMPLE CONFIRMATION -->
+						<section class="booking-panel booking-success" data-panel="6" hidden aria-labelledby="s6-h">
+							<h2 id="s6-h" class="visually-hidden">Booking confirmed</h2>
+							<div class="success-check" aria-hidden="true">✓</div>
+							<p class="success-ref">Reference <strong data-success-ref>—</strong></p>
+							<p class="booking-hint" data-success-summary>—</p>								<p class="booking-hint" data-sample-note hidden><strong>Sample booking</strong> — created with demo data (fallback only; the salon server could not be reached).</p>
+								<div class="btn-row">
+									<a class="btn btn-accent" data-cta-visits href="my-visits.html">View in My Visits</a>
+									<a class="btn btn-ghost" href="index.html">Back to home</a>
+								</div>
+						</section>
+
+						<!-- wizard nav (Confirm button lives on step 5) -->
+						<div class="booking-nav" data-wizard-nav>
+							<button class="btn btn-ghost" type="button" data-back hidden>Back</button>
+							<button class="btn btn-accent" type="button" data-next>Next</button>
+							<button class="btn btn-accent" type="button" data-confirm hidden>Confirm booking</button>
+						</div>
+
+					</div>
+				</div>
+			</div>
+		</section>
+
+	</main>
+
+	<footer class="site-footer">
+		<div class="container footer-inner">
+			<div class="footer-brand">
+				<a class="brand brand-light" href="index.html" aria-label="Amoré — home">
+					<svg class="brand-mark" viewBox="0 0 32 32" width="34" height="34" aria-hidden="true" focusable="false">
+						<rect width="32" height="32" rx="8" fill="#E11D48"/>
+						<path d="M9 24 L16 7 L23 24" fill="none" stroke="#ffffff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+						<circle cx="16" cy="19.2" r="2.7" fill="#ffffff"/>
+					</svg>
+					<span class="brand-name">Amor<span class="brand-name-accent">é</span></span>
+				</a>
+				<p class="footer-note">A unisex salon — cuts, colour and care for everyone.</p>
+			</div>
+			<nav class="footer-col" aria-label="Footer">
+				<p class="footer-heading">Explore</p>
+				<ul>
+					<li><a href="index.html">Home</a></li>
+					<li><a href="services.html">Services</a></li>
+					<li><a href="stylists.html">Stylists</a></li>
+					<li><a href="about.html">About</a></li>
+					<li><a href="my-visits.html">My Visits</a></li>
+				</ul>
+			</nav>
+			<div class="footer-col">
+				<p class="footer-heading">Salon</p>
+				<ul>
+					<li><a href="booking.html">Book an appointment</a></li>
+					<li><a href="index.html#reviews">Reviews</a></li>
+				</ul>
+			</div>
+			<p class="footer-legal">&copy; 2026 Amoré. All rights reserved.</p>
+		</div>
+	</footer>
+
+	<script src="js/api.js"></script>
+	<script src="js/sample-data.js"></script>
+	<script src="js/main.js"></script>
+	<script src="js/booking.js"></script>
+</body>
+</html>

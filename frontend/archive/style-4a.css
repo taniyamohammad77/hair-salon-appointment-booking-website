@@ -1,0 +1,414 @@
+/* ==========================================================================
+   AMORÉ — Design System · Phase 4A (Branding & Visual Direction)
+   --------------------------------------------------------------------------
+   Spanish-inspired, pastel, cute + modern + premium-ish. UNISEX: warm cream
+   and peach balance the rose so nothing reads gendered. No dark/gold luxury
+   look (never Aurélia). This file holds ONLY tokens + the brand-board
+   preview styles; header/nav/hero/sections arrive with 4B, 4C, …
+   ========================================================================== */
+
+/* ---------- 1. COLOR TOKENS ---------- */
+:root {
+	/* surfaces */
+	--cream: #fffbf5;        /* page background — warm, not sterile white */
+	--cream-deep: #f8efe3;   /* alt sections, wells */
+	--surface: #ffffff;      /* cards */
+
+	/* brand — rose primary */
+	--rose-100: #fbe9ee;
+	--rose-200: #f5cdd7;
+	--rose-400: #e58aa6;
+	--rose-500: #d9768f;     /* primary actions, links */
+	--rose-600: #c05a76;     /* hover */
+
+	/* accent — peach (the Spanish warmth) */
+	--peach-100: #fdeadd;
+	--peach-300: #f7c9a8;
+	--peach-500: #e8a06b;
+
+	/* support — sage (quiet, unisex balance) */
+	--sage-100: #eaf2ec;
+	--sage-400: #9db8a2;
+
+	/* ink — espresso, never pure black */
+	--ink: #43382f;
+	--ink-soft: #8a7a6d;
+	--line: #f0e2d8;
+
+	/* status (final UX, used from 4K) */
+	--danger: #d95f4c;
+	--danger-soft: #fbe7e3;
+	--success: #4c9e7e;
+
+	/* gradients */
+	--grad-brand: linear-gradient(135deg, var(--rose-400), var(--peach-300));
+}
+
+/* ---------- 2. TYPE TOKENS ---------- */
+:root {
+	/* Fraunces = display (romantic, premium-ish) · Nunito = body (friendly) */
+	--font-display: "Fraunces", Georgia, serif;
+	--font-body: "Nunito", system-ui, sans-serif;
+
+	--text-hero: clamp(2.6rem, 6vw, 4.2rem);
+	--text-h2: clamp(1.7rem, 3vw, 2.4rem);
+	--text-h3: 1.25rem;
+	--text-body: 1rem;
+	--text-small: 0.9rem;
+}
+
+/* ---------- 3. SHAPE + DEPTH TOKENS ---------- */
+:root {
+	--radius-lg: 24px;
+	--radius: 16px;
+	--radius-sm: 10px;
+	--radius-pill: 999px;
+
+	--shadow-soft: 0 4px 16px rgba(67, 56, 47, 0.07);
+	--shadow-lift: 0 12px 32px rgba(217, 118, 143, 0.18);
+
+	--space-1: 0.5rem;
+	--space-2: 1rem;
+	--space-3: 1.5rem;
+	--space-4: 2.5rem;
+	--space-5: 4rem;
+}
+
+/* ---------- base (page-level; layout comes in 4B) ---------- */
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	background: var(--cream);
+	color: var(--ink);
+	font-family: var(--font-body);
+	font-size: var(--text-body);
+	line-height: 1.6;
+	-webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+	font-family: var(--font-display);
+	font-weight: 600;
+	line-height: 1.15;
+	margin: 0 0 var(--space-2);
+}
+
+/* ==========================================================================
+   BRAND BOARD — Phase 4A preview page only (frontend/brand.html).
+   Replaced by the real site structure from Phase 4B onward.
+   ========================================================================== */
+
+.board {
+	max-width: 1060px;
+	margin: 0 auto;
+	padding: var(--space-4) var(--space-2) var(--space-5);
+}
+
+.board-banner {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	background: var(--peach-100);
+	color: #9c6a3c;
+	font-size: var(--text-small);
+	font-weight: 700;
+	border-radius: var(--radius-pill);
+	padding: 0.35rem 1rem;
+	margin-bottom: var(--space-3);
+}
+
+.board h1 {
+	font-size: clamp(2rem, 4vw, 2.8rem);
+}
+
+.board-intro {
+	color: var(--ink-soft);
+	max-width: 46rem;
+}
+
+.board-section {
+	margin-top: var(--space-5);
+}
+
+.board-section > h2 {
+	font-size: var(--text-h2);
+}
+
+.board-section > .section-sub {
+	color: var(--ink-soft);
+	margin-top: -0.4rem;
+}
+
+.board-grid {
+	display: grid;
+	gap: var(--space-3);
+}
+
+/* ---------- logo lockups ---------- */
+.logo-grid {
+	grid-template-columns: 1fr 1fr;
+}
+
+.logo-card {
+	border-radius: var(--radius-lg);
+	padding: var(--space-4);
+	display: grid;
+	place-items: center;
+	gap: var(--space-2);
+	min-height: 190px;
+}
+
+.logo-card.on-light {
+	background: var(--surface);
+	border: 1px solid var(--line);
+	box-shadow: var(--shadow-soft);
+}
+
+.logo-card.on-dark {
+	background: var(--ink);
+}
+
+.logo-card .usage {
+	font-size: 0.8rem;
+	color: var(--ink-soft);
+	margin: 0;
+}
+
+.logo-card.on-dark .usage {
+	color: #cbbfae;
+}
+
+/* the lockup itself — reused on the real site header (4B) */
+.logo {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 0.45rem;
+	font-family: var(--font-display);
+	font-weight: 600;
+	font-size: 2.2rem;
+	line-height: 1;
+}
+
+.logo .logo-mark {
+	font-size: 1.35rem;
+	transform: translateY(-0.35em);
+}
+
+.logo .logo-sub {
+	font-family: var(--font-body);
+	font-size: 0.72rem;
+	font-weight: 700;
+	letter-spacing: 0.22em;
+	text-transform: uppercase;
+	color: var(--ink-soft);
+}
+
+.logo.on-dark,
+.logo.on-dark .logo-sub {
+	color: #fdf4ea;
+}
+
+.logo.accent {
+	color: var(--rose-500);
+}
+
+/* ---------- favicon preview ---------- */
+.favicon-row {
+	display: flex;
+	align-items: flex-end;
+	gap: var(--space-3);
+	flex-wrap: wrap;
+}
+
+.fav {
+	display: grid;
+	place-items: center;
+	background: var(--grad-brand);
+	color: #fff;
+	font-family: var(--font-display);
+	font-weight: 600;
+	border-radius: 22%;
+	line-height: 1;
+}
+
+.fav-64 { width: 64px; height: 64px; font-size: 38px; }
+.fav-32 { width: 32px; height: 32px; font-size: 19px; }
+.fav-16 { width: 16px; height: 16px; font-size: 10px; }
+
+.fav-note {
+	font-size: var(--text-small);
+	color: var(--ink-soft);
+	margin: 0;
+}
+
+/* ---------- palette ---------- */
+.swatch-grid {
+	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+.swatch {
+	border-radius: var(--radius);
+	overflow: hidden;
+	border: 1px solid var(--line);
+	background: var(--surface);
+	box-shadow: var(--shadow-soft);
+}
+
+.swatch .chip {
+	height: 76px;
+}
+
+.swatch .meta {
+	padding: 0.55rem 0.8rem;
+}
+
+.swatch .name {
+	font-weight: 800;
+	font-size: 0.88rem;
+	margin: 0;
+}
+
+.swatch .hex {
+	font-size: 0.78rem;
+	color: var(--ink-soft);
+	margin: 0;
+}
+
+/* ---------- type specimens ---------- */
+.type-grid {
+	grid-template-columns: 1fr 1fr;
+}
+
+.type-card {
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: var(--radius-lg);
+	padding: var(--space-3);
+	box-shadow: var(--shadow-soft);
+}
+
+.type-sample-display {
+	font-family: var(--font-display);
+	font-size: 2.6rem;
+	margin: 0 0 0.3rem;
+}
+
+.type-sample-body {
+	margin: 0;
+	font-size: 1.05rem;
+}
+
+.type-meta {
+	font-size: 0.82rem;
+	color: var(--ink-soft);
+	margin: 0.6rem 0 0;
+}
+
+/* ---------- voice / buttons ---------- */
+.voice-grid {
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.voice-card {
+	background: var(--cream-deep);
+	border-radius: var(--radius-lg);
+	padding: var(--space-3);
+}
+
+.voice-card p {
+	margin: 0;
+	font-family: var(--font-display);
+	font-size: 1.15rem;
+}
+
+.voice-card span {
+	display: block;
+	margin-top: 0.4rem;
+	font-family: var(--font-body);
+	font-size: 0.82rem;
+	color: var(--ink-soft);
+}
+
+.btn-row {
+	display: flex;
+	gap: var(--space-2);
+	flex-wrap: wrap;
+	align-items: center;
+}
+
+.btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	border: 0;
+	cursor: pointer;
+	font-family: var(--font-body);
+	font-weight: 800;
+	font-size: 0.95rem;
+	padding: 0.7rem 1.5rem;
+	border-radius: var(--radius-pill);
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn:hover {
+	transform: translateY(-2px);
+}
+
+.btn-primary {
+	background: var(--rose-500);
+	color: #fff;
+	box-shadow: var(--shadow-soft);
+}
+
+.btn-primary:hover {
+	background: var(--rose-600);
+	box-shadow: var(--shadow-lift);
+}
+
+.btn-accent {
+	background: var(--peach-100);
+	color: #9c6a3c;
+}
+
+.btn-ghost {
+	background: transparent;
+	color: var(--ink);
+	border: 1.5px solid var(--line);
+}
+
+.board-footer {
+	margin-top: var(--space-5);
+	text-align: center;
+	color: var(--ink-soft);
+	font-size: var(--text-small);
+}
+
+/* ---------- responsive (board itself) ---------- */
+@media (max-width: 720px) {
+
+	.logo-grid,
+	.type-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.board {
+		padding-inline: var(--space-2);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+	*,
+	*::before,
+	*::after {
+		transition-duration: 0.001s !important;
+		animation-duration: 0.001s !important;
+	}
+}
