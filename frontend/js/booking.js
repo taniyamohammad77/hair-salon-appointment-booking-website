@@ -204,18 +204,23 @@
 				return null; // a newer request superseded this one
 			}
 			if (res.ok && res.data && Array.isArray(res.data.slots)) {
+				// success → cached: re-picks/re-entries of this key skip the refetch
 				slotsCache = { key: key, slots: res.data.slots, source: "api", error: null };
-			} else {
-				// API unreachable/unhappy → documented sample fallback (honest)
-				var service = window.sampleServiceById(serviceId);
-				slotsCache = {
-					key: key,
+				return { result: slotsCache, seq: seq };
+			}
+			// API unreachable/unhappy → documented sample fallback (honest).
+			// NOT cached: the next selection/re-entry of this same key retries
+			// the real API automatically — a failure must never stick.
+			var service = window.sampleServiceById(serviceId);
+			return {
+				result: {
+					key: null,
 					slots: service ? S.slotsFor(stylistId, date, service) : [],
 					source: "sample",
 					error: (res.error && typeof res.error === "string") ? res.error : null
-				};
-			}
-			return { result: slotsCache, seq: seq };
+				},
+				seq: seq
+			};
 		});
 	}
 

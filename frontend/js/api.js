@@ -32,7 +32,7 @@
 	 */
 	var API = {
 		BASE_URL: "http://localhost:8080",
-		TIMEOUT_MS: 5000,
+		TIMEOUT_MS: 10000,
 		request: request,
 		checkHealth: checkHealth,
 		getServices: getServices,
