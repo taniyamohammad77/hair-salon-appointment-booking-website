@@ -1,16 +1,18 @@
 /* ==========================================================================
-   MY VISITS (integration step 5)
+   MY VISITS (integration step 5 + AUTH PHASE 4)
    --------------------------------------------------------------------------
-   Email lookup → real bookings from GET /api/bookings?email= via the ONE
-   centralized API layer (js/api.js), split upcoming/past in the existing
-   UI. Full wiring (user decision): Cancel → PUT /api/bookings/{id}/cancel,
-   Reschedule → real availability (GET /api/availability) + PUT
-   /api/bookings/{id}/reschedule.
+   AUTH PHASE 4: identity = the logged-in account. The page no longer offers
+   an arbitrary email lookup (the backend now 403s it anyway): the account
+   email from /api/auth/me IS the lookup; not-logged-in visitors get an
+   honest "log in" prompt instead of a form that cannot work. Real rows
+   still come from GET /api/bookings?email=<account email> — now with the
+   bearer token attached automatically by api.js — and cancel/reschedule
+   carry the token too (backend enforces ownership).
 
    HONESTY RULES (user rule 5/10):
-     - API unavailable → documented sample fallback (seed + session rows),
-       announced with an honest banner + "(sample data)" result title. Sample
-       bookings are NEVER presented as real appointments.
+     - API unavailable → documented sample fallback (seed + session rows for
+       the ACCOUNT email), announced with an honest banner + "(sample data)"
+       result title. Sample bookings are NEVER presented as real appointments.
      - A failed CANCEL/RESCHEDULE of a REAL booking never flips the page to
        sample data: the last good real rows stay on screen with an honest
        message (a fallback here could HIDE the user's real booking).
@@ -545,31 +547,55 @@
 		renderFromRows(sampleRowsFor(currentEmail), "sample");
 	}
 
-	/* ---------- lookup form ---------- */
-	document.querySelector("[data-lookup-form]").addEventListener("submit", function (e) {
-		e.preventDefault();
-		var input = document.querySelector("[data-lookup-email]");
-		var err = document.querySelector("[data-lookup-error]");
-		var email = input.value.trim();
-		if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
-			err.textContent = "Please enter a valid email.";
-			err.hidden = false;
+	/* ======================================================================
+	   AUTH PHASE 4 — identity bootstrap. The lookup form is replaced by the
+	   account identity: logged-out → honest login prompt (no fake data,
+	   the backend would 401 anyway); logged-in → hide the form, revalidate
+	   via /me, then auto-lookup the ACCOUNT email. No arbitrary email can
+	   ever be queried from this page.
+	   ====================================================================== */
+	var lookupForm = document.querySelector("[data-lookup-form]");
+	var lookupCard = lookupForm ? lookupForm.closest(".booking-card") : null;
+
+	function renderLoginPrompt() {
+		if (!lookupCard) { return; }
+		lookupForm.hidden = true;
+		var hint = lookupCard.querySelector(".booking-hint");
+		if (hint) {
+			hint.textContent = "Log in to see your visits — visits belong to your account.\u00A0";
+		}
+		var link = document.createElement("a");
+		link.className = "btn btn-accent";
+		link.href = "login.html?next=" + encodeURIComponent("/my-visits.html");
+		link.textContent = "Log in";
+		lookupForm.parentNode.insertBefore(link, lookupForm.nextSibling);
+	}
+
+	function initIdentity() {
+		if (!window.AMORE_API || !window.AMORE_API.isLoggedIn()) {
+			renderLoginPrompt();
 			return;
 		}
-		err.hidden = true;
-		try { window.sessionStorage.setItem("amore-visits-email", email); } catch (err2) {}
-		performLookup(email);
-	});
-
-	/* Convenience: arriving from the booking confirmation CTA pre-fills the
-	   email used for the booking (session-scoped) and looks it up live. */
-	(function prefillFromSession() {
-		try {
-			var saved = window.sessionStorage.getItem("amore-visits-email");
-			if (saved) {
-				document.querySelector("[data-lookup-email]").value = saved;
-				performLookup(saved);
+		window.AMORE_API.me().then(function (res) {
+			if (!(res.ok && res.data && res.data.email)) {
+				// dead/expired token (api.js cleared it) or server down — honest prompt
+				renderLoginPrompt();
+				return;
 			}
-		} catch (e) {}
-	})();
+			currentEmail = res.data.email;
+			if (lookupForm) { lookupForm.hidden = true; }
+			var hint = lookupCard ? lookupCard.querySelector(".booking-hint") : null;
+			if (hint) {
+				hint.textContent = "Showing visits for " + res.data.email + " (your account).";
+				// PHASE 5A: unverified accounts can't see bookings that existed
+				// before they signed up — say so honestly (no redesign).
+				if (res.data.verified === false) {
+					hint.textContent += " Older visits (made before you signed up) appear once the salon verifies your email.";
+				}
+			}
+			performLookup(res.data.email);
+		});
+	}
+
+	initIdentity();
 })();

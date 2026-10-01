@@ -40,6 +40,7 @@
 
 	var TOTAL_STEPS = 6;
 	var state = {
+		account: null, // AUTH PHASE 4: {id,name,email} from /api/auth/me
 		step: 1,
 		serviceId: null,
 		stylistId: null,
@@ -324,6 +325,10 @@
 		var nameIn = wizard.querySelector("[data-name]");
 		var emailIn = wizard.querySelector("[data-email]");
 		var ok = true;
+		// AUTH PHASE 4: email is account-owned + read-only — never user-validated
+		if (state.account) {
+			state.email = state.account.email;
+		}
 		if (show) {
 			ok = fieldError(nameIn, wizard.querySelector("[data-name-error]"),
 				nameIn.value.trim().length >= 2 && nameIn.value.trim().length <= 120
@@ -383,77 +388,26 @@
 		wizard.querySelector("[data-review-notes]").textContent = state.notes || "—";
 	}
 
-	/* What the confirmation panel last rendered (real | sample). */
+	/* The confirmation panel (AUTH PHASE 5: sample path removed — every
+	   confirmation is now REAL; the submit flow requires an authenticated
+	   account and the backend is the only source of bookings). */
 	var confirmation = null;
 
-	/** Render panel 6 from a confirmation object:
-	 *  { kind: "real", ref, summary }  — live booking, no sample wording,
-	 *                                    no "View in My Visits" claim (My
-	 *                                    Visits is not integrated yet).
-	 *  { kind: "sample", ref, summary } — defensive-only, clearly labelled.
-	 */
 	function renderConfirmation(conf) {
 		confirmation = conf;
 		wizard.querySelector("[data-success-ref]").textContent = conf.ref;
 		wizard.querySelector("[data-success-summary]").textContent = conf.summary;
-
-		// honesty switches: the sample disclaimer stays sample-only. The
-		// "View in My Visits" CTA is TRUE for both paths since Step 5 — real
-		// bookings are discoverable via the real email lookup, and the CTA
-		// pre-fills that email (approved Step-4 decision).
-		var sampleNote = wizard.querySelector("[data-sample-note]");
-		if (sampleNote) {
-			sampleNote.hidden = conf.kind !== "sample";
-		}
 	}
 
 	function buildRealConfirmation(data) {
 		var s = window.sampleServiceById(state.serviceId);
 		var st = window.sampleStylistById(state.stylistId);
 		return {
-			kind: "real",
 			ref: String(data.id),
-			// NO "Find it in My Visits" claim — My Visits is not integrated yet
 			summary: (s ? s.name : "Service") + " with " + (st ? st.name : "stylist") +
 				" — " + state.date + " at " + state.time +
 				(data.endTime ? ", until " + data.endTime : "") + "."
 		};
-	}
-
-	/** Defensive-only sample confirmation (kept from Phase 5; the submit
-	 *  flow can no longer reach it — the real API is the only path). */
-	function showSampleConfirmation() {
-		var ref = "SAMPLE-" + Math.floor(100000 + Math.random() * 900000);
-		var s = window.sampleServiceById(state.serviceId);
-		var st = window.sampleStylistById(state.stylistId);
-		renderConfirmation({
-			kind: "sample",
-			ref: ref,
-			summary: (s ? s.name : "Service") + " with " + (st ? st.name : "stylist") +
-				" — " + state.date + " at " + state.time + ". Find it in My Visits (email: " + state.email + ")."
-		});
-
-		// Dev-only persistence (session store) — unchanged Phase 5 behavior.
-		var mins = S.toMinutes(state.time) + (s ? s.durationMinutes : 0);
-		var booking = {
-			id: 900000 + Math.floor(Math.random() * 99999),
-			customerName: state.name,
-			email: state.email,
-			phone: state.phone,
-			serviceId: state.serviceId,
-			stylistId: state.stylistId,
-			date: state.date,
-			time: state.time,
-			endTime: S.toHHMM(mins),
-			status: "CONFIRMED",
-			notes: state.notes,
-			createdAt: S.todayISO()
-		};
-		try {
-			var store = JSON.parse(window.sessionStorage.getItem("amore-sample-bookings") || "[]");
-			store.push(booking);
-			window.sessionStorage.setItem("amore-sample-bookings", JSON.stringify(store));
-		} catch (e) { /* storage unavailable — sample booking stays in-page only */ }
 	}
 
 	/* ----------------------------------------------------------------------
@@ -467,6 +421,16 @@
 	   ---------------------------------------------------------------------- */
 	function submitBooking() {
 		var submitBtn = confirmBtn;
+		if (!state.account) {
+			// Defensive: the gate at load guarantees this — a stale tab that sat
+			// on the wizard past session death lands here honestly.
+			flashError("Please log in to book. Redirecting to the login page…");
+			setTimeout(function () {
+				window.location.replace("login.html?next=" + encodeURIComponent(
+					window.location.pathname + window.location.search));
+			}, 1200);
+			return;
+		}
 		if (typeof window.AMORE_API === "undefined" || !window.AMORE_API.request) {
 			// API layer missing is a setup bug, not a user situation — stay
 			// honest either way: no sample booking, no fake confirmation.
@@ -488,7 +452,7 @@
 			date: state.date,
 			time: state.time,
 			customerName: state.name,
-			email: state.email,
+			email: state.account.email, // AUTH PHASE 4: account identity, not client-asserted
 			phone: state.phone,
 			notes: state.notes || null,
 			endTime: s ? S.toHHMM(S.toMinutes(state.time) + s.durationMinutes) : null
@@ -500,6 +464,15 @@
 					wizard.querySelector("[data-review-error]").hidden = true;
 					renderConfirmation(buildRealConfirmation(res.data));
 					show(TOTAL_STEPS);
+					return;
+				}
+				if (res.status === 401) {
+					// session died mid-wizard (api.js cleared it) — honest bounce
+					flashError("Your session expired. Redirecting to the login page…");
+					setTimeout(function () {
+						window.location.replace("login.html?next=" + encodeURIComponent(
+							window.location.pathname + window.location.search));
+					}, 1200);
 					return;
 				}
 				if (res.status === 409) {
@@ -584,11 +557,8 @@
 		submitBooking(); // real submission (Step 4) — panel 6 only on API success
 	});
 
-	// Final-state CTA — valid for BOTH confirmation kinds since Step 5:
-	// My Visits looks up REAL bookings by email, and this pre-fills it.
-	wizard.querySelector("[data-cta-visits]").addEventListener("click", function () {
-		try { window.sessionStorage.setItem("amore-visits-email", state.email); } catch (e) {}
-	});
+	// Final-state CTA — My Visits now auto-loads the ACCOUNT's bookings
+	// (AUTH PHASE 4); no prefill state needs carrying across pages.
 
 	// Edit links on the review step
 	wizard.querySelectorAll("[data-edit]").forEach(function (btn) {
@@ -617,6 +587,35 @@
 		}
 	}
 
+	/* ======================================================================
+	   LOGIN GATE (AUTH PHASE 4 — approved decision: booking REQUIRES login)
+	   An unauthenticated visitor is sent to login.html?next=<this URL incl.
+	   deep links> BEFORE seeing the wizard; after login the ?next= returns
+	   them here and the gate re-runs. A user whose token fails /me (expired)
+	   gets the same redirect — never a half-authenticated wizard.
+	   ====================================================================== */
+	function requireLogin() {
+		if (!window.AMORE_API || !window.AMORE_API.isLoggedIn()) {
+			window.location.replace("login.html?next=" + encodeURIComponent(
+				window.location.pathname + window.location.search));
+			return;
+		}
+		window.AMORE_API.me().then(function (res) {
+			if (!(res.ok && res.data && res.data.email)) {
+				// dead token (api.js already cleared it) or server down — both
+				// honestly bounce to login; ?next= preserves the deep link.
+				window.location.replace("login.html?next=" + encodeURIComponent(
+					window.location.pathname + window.location.search));
+				return;
+			}
+			state.account = res.data; // {id,name,email} — authoritative identity
+			wizard.querySelector("[data-name]").value = res.data.name || "";
+			wizard.querySelector("[data-email]").value = res.data.email || "";
+			wizard.querySelector("[data-email]").readOnly = true; // ownership rule: account email IS the booking email
+		});
+	}
+
+	requireLogin();
 	applyDeepLinks();
 	renderServices();
 	initDateInput();

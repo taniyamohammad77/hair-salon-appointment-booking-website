@@ -1,15 +1,20 @@
 /* ==========================================================================
-   AUTH UI (frontend-only, Phase 7) — LOGIN + SIGNUP
+   AUTH UI (Phase 7 UI + AUTH PHASE 4 real submit) — LOGIN + SIGNUP
    --------------------------------------------------------------------------
-   UI-only by design (user rule 5): there is NO authentication backend, so
-   the submit path runs INLINE VALIDATION and then shows an explicit,
-   unmissable coming-soon state. It never authenticates, redirects, creates
-   sessions/tokens, or stores ANYTHING — no localStorage, no sessionStorage,
-   no cookies, no password persistence of any kind. Password values live
-   only in the input fields while the user types and are cleared on submit.
-   Validation rules mirror the future backend contract (email ≤160,
-   name 2–120) so the real integration can swap this file's submit branch
-   for fetch() without touching the markup.
+   PHASE 4: the same markup now talks to the real backend via the ONE API
+   layer (AMORE_API.signup/login). Validation rules are UNCHANGED; a valid
+   submit now reaches the server:
+     - LOGIN: wrong credentials → honest inline error, form stays. Success →
+       session stored by api.js, then a REDIRECT to the "next" destination
+       (login.html?next=<encoded> — set by the booking gate so deep links
+       like ?service=&stylist= survive the round-trip; default index.html).
+     - SIGNUP: success → confirmation panel (same card, no redesign) with a
+       direct "Log in" link (no auto-login — the user then logs in and is
+       returned to where they were headed via the same ?next= mechanism).
+       409 duplicate email → honest inline error.
+   The old "coming soon" panel is gone from the submit path — this page can
+   no longer pretend auth is unavailable. Passwords are never stored; the
+   token lives in sessionStorage via api.js only.
    ========================================================================== */
 (function () {
 	"use strict";
@@ -22,6 +27,39 @@
 	}
 
 	var isSignup = !!form.querySelector("[data-confirm]");
+
+	/* PHASE 4: where should a successful auth flow land? The booking gate
+	   links here with ?next=<full URL> — only same-origin http(s) URLs are
+	   honored (open-redirect protection); anything else → index.html. */
+	function nextDestination() {
+		try {
+			var next = new URLSearchParams(window.location.search).get("next");
+			if (next) {
+				var url = new URL(next, window.location.origin);
+				if (url.origin === window.location.origin) { return url.pathname + url.search; }
+			}
+		} catch (e) { /* malformed next — fall through to default */ }
+		return "index.html";
+	}
+
+	/* First error from the backend's {error, fields:{name:msg}} shape → the
+	   existing inline error elements (no redesign; same ladder as client
+	   validation). Returns true when an error was rendered. */
+	function renderFieldErrors(fields) {
+		if (!fields) { return false; }
+		var firstInput = null;
+		Object.keys(fields).forEach(function (key) {
+			var map = { name: "[data-name]", email: "[data-email]", password: "[data-password]", confirmPassword: "[data-confirm]" };
+			var input = form.querySelector(map[key]);
+			if (input) {
+				var f = field(input);
+				if (f.err) { setError(input, f.err, fields[key]); }
+				if (!firstInput) { firstInput = input; }
+			}
+		});
+		if (firstInput) { firstInput.focus(); }
+		return !!firstInput;
+	}
 
 	var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -149,7 +187,31 @@
 		});
 	}
 
-	/* ---------- submit: validate, then HONEST coming-soon (never auth) ---------- */
+	/* ---------- submit: validate, then the REAL backend (Phase 4) ---------- */
+	var submitBtn = form.querySelector("[data-submit]");
+
+	function setBusy(busy) {
+		if (submitBtn) {
+			submitBtn.disabled = busy;
+			if (busy) { submitBtn.setAttribute("aria-busy", "true"); }
+			else { submitBtn.removeAttribute("aria-busy"); }
+		}
+	}
+
+	function showComingPanel(message) {
+		form.querySelector("[data-password]").value = "";
+		if (confirmEl) { confirmEl.value = ""; }
+		// reuse the same card: swap the form for the (retitled) panel
+		var title = coming.querySelector("h2");
+		if (title) { title.textContent = message; }
+		var notes = coming.querySelectorAll(".booking-hint");
+		notes.forEach(function (p) { p.hidden = true; }); // demo wording is obsolete
+		form.hidden = true;
+		coming.hidden = false;
+		coming.setAttribute("tabindex", "-1");
+		coming.focus({ preventScroll: true });
+	}
+
 	form.addEventListener("submit", function (e) {
 		e.preventDefault();
 		var result = validateAll();
@@ -160,18 +222,73 @@
 			}
 			return;
 		}
-		// Valid input — but there is NO auth backend. Honest state only:
-		// clear the in-memory password values, swap to the coming-soon panel,
-		// store nothing, redirect nowhere.
-		form.querySelector("[data-password]").value = "";
-		if (confirmEl) { confirmEl.value = ""; }
-		form.hidden = true;
-		coming.hidden = false;
-		coming.setAttribute("tabindex", "-1");
-		coming.focus({ preventScroll: true });
-		announce(isSignup
-			? "Account creation is coming soon. This demo is not connected to an account service yet."
-			: "Authentication is coming soon. This demo is not connected to an account service yet.");
+		if (typeof window.AMORE_API === "undefined" || !window.AMORE_API.request) {
+			announce("The salon server could not be reached. Please try again.");
+			return;
+		}
+
+		var email = form.querySelector("[data-email]").value.trim();
+		var password = form.querySelector("[data-password]").value;
+		setBusy(true);
+
+		if (isSignup) {
+			var name = form.querySelector("[data-name]").value.trim();
+			window.AMORE_API.signup(name, email, password).then(function (res) {
+				if (res.ok) {
+					// PHASE 4 requirement 5: signup ESTABLISHES the session — the
+					// signup API returns no token, so the same credentials are
+					// exchanged for one immediately (api.js stores it), then the
+					// user lands where they were headed via ?next=.
+					window.AMORE_API.login(email, password).then(function (lres) {
+						setBusy(false);
+						form.querySelector("[data-password]").value = "";
+						if (confirmEl) { confirmEl.value = ""; }
+						if (lres.ok) {
+							announce("Account created and logged in as " + lres.data.email + ".");
+							window.location.replace(nextDestination());
+							return;
+						}
+						// rare (account exists but login hiccup) — honest panel
+						showComingPanel("Account created — you're ready to log in");
+						announce("Account created for " + res.data.email + ". Please log in.");
+					});
+					return;
+				}
+				setBusy(false);
+				form.querySelector("[data-password]").value = "";
+				if (confirmEl) { confirmEl.value = ""; }
+				if (res.status === 409) {
+					announce("That email already has an account — log in instead.");
+					if (!renderFieldErrors(res.data && res.data.fields)) {
+						var f = field(form.querySelector("[data-email]"));
+						setError(f.input, f.err, "An account with this email already exists. Try logging in instead.");
+					}
+					return;
+				}
+				// 400 validation or anything else — surface honestly
+				announce(res.error || "Sign up failed — please try again.");
+				if (!renderFieldErrors(res.data && res.data.fields)) {
+					var f2 = field(form.querySelector("[data-email]"));
+					setError(f2.input, f2.err, res.error || "Sign up failed — please try again.");
+				}
+			});
+			return;
+		}
+
+		// LOGIN
+		window.AMORE_API.login(email, password).then(function (res) {
+			setBusy(false);
+			form.querySelector("[data-password]").value = ""; // never keep it around
+			if (res.ok) {
+				announce("Logged in as " + res.data.email + ".");
+				window.location.replace(nextDestination()); // back to the intended flow
+				return;
+			}
+			// 401 (wrong credentials) / network / anything else — honest inline
+			announce(res.error || "Log in failed — please try again.");
+			var f3 = field(form.querySelector("[data-email]"));
+			setError(f3.input, f3.err, res.error || "Log in failed — please try again.");
+		});
 	});
 
 	/* ---------- password show/hide (one handler serves both pages) ---------- */

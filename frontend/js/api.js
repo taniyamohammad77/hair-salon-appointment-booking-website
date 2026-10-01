@@ -11,6 +11,11 @@
    Step-2 scope (catalogue):
      - AMORE_API.getServices()          GET /api/services
      - AMORE_API.getStylists(serviceId) GET /api/stylists[?serviceId=]
+   Phase-4 scope (auth):
+     - AMORE_API.signup/login/me/logout + sessionStorage session helpers.
+       request() attaches the bearer token to EVERY call automatically and
+       clears the session on any 401 that carried one (honest expiry
+       handling — pages decide the redirect).
 
    Every call NEVER throws — resolves {ok, status, data, error} so callers
    can render an honest state instead of breaking the page.
@@ -36,7 +41,16 @@
 		request: request,
 		checkHealth: checkHealth,
 		getServices: getServices,
-		getStylists: getStylists
+		getStylists: getStylists,
+		signup: signup,
+		login: login,
+		me: me,
+		logout: logout,
+		isLoggedIn: isLoggedIn,
+		getToken: getToken,
+		getSessionUser: getSessionUser,
+		setSession: setSession,
+		clearSession: clearSession
 	};
 
 	/**
@@ -50,9 +64,16 @@
 			? setTimeout(function () { controller.abort(); }, API.TIMEOUT_MS)
 			: null;
 
+		// AUTH PHASE 4: the bearer token (if any) rides on EVERY call —
+		// protected endpoints need it; public endpoints simply ignore it.
+		var headers = {};
+		if (options.body) { headers["Content-Type"] = "application/json"; }
+		var token = getToken();
+		if (token) { headers["Authorization"] = "Bearer " + token; }
+
 		return fetch(API.BASE_URL + path, {
 			method: method,
-			headers: options.body ? { "Content-Type": "application/json" } : undefined,
+			headers: headers,
 			body: options.body ? JSON.stringify(options.body) : undefined,
 			signal: controller ? controller.signal : undefined,
 			// rule 10: availability/visit data must never be served from the
@@ -77,6 +98,10 @@
 					// Backend error shape: { "error": "human friendly message" }
 					out.error = (result.data && result.data.error) || "Request failed (" + res.status + ").";
 				}
+				// AUTH: a 401 on a call that CARRIED a token means the session
+				// is dead (expired/invalid/tampered) — clear it honestly. A 401
+				// without a token (e.g. wrong password) leaves the session alone.
+				if (res.status === 401 && token) { clearSession(); }
 				return out;
 			})
 			.catch(function (err) {
@@ -110,6 +135,65 @@
 		}
 		return request("GET", path);
 	}
+
+	/* ======================================================================
+	   AUTH SESSION (Phase 4) — sessionStorage token + cached identity.
+	   sessionStorage (approved): survives page navigation within the tab,
+	   dies with the tab — no persistent login on shared machines.
+	   ====================================================================== */
+	var TOKEN_KEY = "amore-auth-token";
+	var USER_KEY = "amore-auth-user";
+
+	function getToken() {
+		try { return window.sessionStorage.getItem(TOKEN_KEY); } catch (e) { return null; }
+	}
+
+	/** Store/clear the session. user = {id, name, email} (identity cache —
+	 *  always revalidated against /api/auth/me; never a source of truth). */
+	function setSession(token, user) {
+		try {
+			if (token) { window.sessionStorage.setItem(TOKEN_KEY, token); }
+			else { window.sessionStorage.removeItem(TOKEN_KEY); }
+			if (user) { window.sessionStorage.setItem(USER_KEY, JSON.stringify(user)); }
+			else { window.sessionStorage.removeItem(USER_KEY); }
+		} catch (e) { /* storage unavailable — session stays in-page only */ }
+	}
+
+	function getSessionUser() {
+		try { return JSON.parse(window.sessionStorage.getItem(USER_KEY) || "null"); } catch (e) { return null; }
+	}
+
+	function isLoggedIn() { return !!getToken(); }
+
+	function clearSession() { setSession(null, null); }
+
+	/** POST /api/auth/signup → 201 {id,name,email} (no token — the caller
+	 *  follows up with login). 409 duplicate email → {ok:false}. */
+	function signup(name, email, password) {
+		return request("POST", "/api/auth/signup", {
+			body: { name: name, email: email, password: password }
+		});
+	}
+
+	/** POST /api/auth/login → on success the session is stored HERE (every
+	 *  caller wants that); the response still flows through for messaging. */
+	function login(email, password) {
+		return request("POST", "/api/auth/login", {
+			body: { email: email, password: password }
+		}).then(function (res) {
+			if (res.ok && res.data && res.data.token) {
+				setSession(res.data.token,
+					{ id: res.data.id, name: res.data.name, email: res.data.email });
+			}
+			return res;
+		});
+	}
+
+	/** GET /api/auth/me → revalidates the token; 200 {id,name,email}. */
+	function me() { return request("GET", "/api/auth/me"); }
+
+	/** Bearer tokens are stateless — logging out is purely local. */
+	function logout() { clearSession(); }
 
 	window.AMORE_API = API;
 })();
