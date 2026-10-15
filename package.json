@@ -1,0 +1,17 @@
+{
+  "name": "hair-salon-booking",
+  "version": "1.0.0",
+  "description": "Public appointment-booking API for a unisex salon. No admin page — customers book, view, reschedule and cancel their own appointments.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "node serve-frontend.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "puppeteer-core": "^25.12.0"
+  }
+}

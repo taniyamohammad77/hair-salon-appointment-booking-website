@@ -1,0 +1,8 @@
+# Dev-only Java security override: allow TLS 1.0/1.1 for the loopback
+# connection to the local SQL Server 2012 RTM instance (it predates TLS 1.2).
+# Used ONLY via:  java -Djava.security.properties=dev-tls12-legacy.security ...
+# If the local SQL Server is ever patched/upgraded, delete this file and
+# switch application.yml back to encrypt=true.
+jdk.tls.disabledAlgorithms=SSLv3, RC4, DES, MD5withRSA, DH keySize < 1024, \
+    EC keySize < 224, 3DES_EDE_CBC, anon, NULL, \
+    include jdk.disabled.namedCurves

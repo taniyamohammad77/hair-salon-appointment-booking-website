@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: salon-backend
+
+  # SQL Server on localhost, Windows Authentication (no password anywhere).
+  # encrypt=false: this local instance only negotiates TLS 1.0, which modern
+  # JDKs refuse. Fine for a dev DB on 127.0.0.1 — when moving online (Azure
+  # SQL / remote), switch to encrypt=true + SQL username/password auth.
+  datasource:
+    url: jdbc:sqlserver://localhost:1433;databaseName=SalonBooking;encrypt=false;integratedSecurity=true;
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+
+  jpa:
+    hibernate:
+      # Schema is created & owned by scripts/schema.sql (run once in SSMS) —
+      # Hibernate only validates at startup, it never alters the DB.
+      ddl-auto: validate
+    open-in-view: false
+    show-sql: false
+
+  # Seed services/stylists on startup. data.sql is idempotent (every INSERT
+  # is guarded with IF NOT EXISTS), so re-running is always safe.
+  sql:
+    init:
+      mode: always
+
+server:
+  port: 8080
+
+salon:
+  # Slot grid for the availability engine (Phase 2)
+  slot-step-minutes: 15
+
+  auth:
+    # AUTH PHASE 2 — HMAC-SHA256 signing secret for bearer tokens.
+    # DEV-ONLY value; if this ever leaves localhost, move it to an
+    # environment variable / secret store and rotate it.
+    token-secret: "${AMORE_TOKEN_SECRET:}"
+    # 7 days — a booking horizon-sized session, no refresh-token machinery.
+    token-ttl-minutes: 10080

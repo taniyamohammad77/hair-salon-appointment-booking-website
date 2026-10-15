@@ -1,0 +1,23 @@
+# OS cruft
+Thumbs.db
+.DS_Store
+
+# Local binaries — auto-downloaded by run-dev scripts
+backend/lib/*.dll
+
+# Frontend (future phases)
+node_modules/
+frontend/dist/
+
+# Local development server logs
+*.log
+
+# Temporary QA audit artifacts
+.tmp-*/
+
+# Sanitized audit-evidence backup
+audit-evidence-backup-*/
+
+# Local environment files
+.env
+.env.*
