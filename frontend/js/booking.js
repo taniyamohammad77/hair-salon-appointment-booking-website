@@ -130,6 +130,18 @@
 		});
 	}
 
+	function stylistNoteEl() {
+		// Honest notice when a (possibly deep-linked) preselection has to be
+		// cleared — created on demand, same house pattern as slotsNoteEl.
+		var el = document.createElement("p");
+		el.className = "field-error";
+		el.setAttribute("data-stylist-note", "");
+		el.setAttribute("role", "status");
+		var options = wizard.querySelector("[data-stylist-options]");
+		options.parentNode.insertBefore(el, options);
+		return el;
+	}
+
 	function renderStylists() {
 		var wrap = wizard.querySelector("[data-stylist-options]");
 		var chosen = window.sampleServiceById(state.serviceId);
@@ -137,8 +149,14 @@
 		wrap.innerHTML = "";
 
 		var list = compatibleStylists(state.serviceId);
+		var droppedName = null;
 		if (state.stylistId && !list.some(function (st) { return st.id === state.stylistId; })) {
-			state.stylistId = null; // preselected stylist can't do this service
+			// The preselected stylist can't do this service — the selection must
+			// be cleared, but NEVER silently: remember who and say why below.
+			var gone = stylists.filter(function (st) { return st.id === state.stylistId; })[0];
+			droppedName = (gone && gone.name) || "Your preselected stylist";
+			state.stylistId = null;
+			state.time = ""; // selection changed → old slots invalid
 		}
 
 		list.forEach(function (st) {
@@ -158,6 +176,18 @@
 			});
 			wrap.appendChild(btn);
 		});
+
+		// Show / clear the honest "preselection couldn't be kept" notice.
+		var note = wizard.querySelector("[data-stylist-note]");
+		if (droppedName) {
+			if (!note) { note = stylistNoteEl(); }
+			note.textContent = droppedName + " doesn't offer " +
+				(chosen ? chosen.name : "this service") + " — please choose another stylist.";
+			note.hidden = false;
+		} else if (note) {
+			note.hidden = true;
+			note.textContent = "";
+		}
 	}
 
 	/* ======================================================================
@@ -582,7 +612,11 @@
 					compatibleStylists(state.serviceId).some(function (s) { return s.id === sty; })) {
 				state.stylistId = sty;
 			} else {
-				state.serviceId = null; // invalid combo — start clean at step 1
+				// Incompatible ?service=/?stylist= combo: keep the EXPLICIT
+				// ?stylist= choice (the user's stated intent) and clear only
+				// the service, so step 1 picks one this stylist actually does.
+				state.stylistId = sty;
+				state.serviceId = null;
 			}
 		}
 	}
