@@ -1,5 +1,20 @@
 # HAIR SALON BOOKING SYSTEM — PROJECT REFERENCE
-### Last updated: October 22, 2026 (PHASE 3 IN PROGRESS — 047988f PUSHED to origin/main; `frontend/sneha/` gitignored; README corrected (72 tests + rate-limiting verified); DB-less CI subset proven 41/41 with NO secret; docs commit + CI workflow commit queued, hashes to be recorded on next update) · Keep this file — it is the working plan
+### Last updated: October 22, 2026 (PHASE 4 STARTED — in-repo evidence folder DELETED after 118/118 SHA-256 identity proof vs D: copy; hybrid Reviews API build in progress per Phase 4 Execution Prompt; docs commit `docs: record phase 3 and phase 4 start notes` = this entry) · Keep this file — it is the working plan
+
+---
+
+## 0. WORK LOG — October 22, 2026 (PHASE 4: REVIEWS API + HOUSEKEEPING)
+
+**Status: IN PROGRESS** — Phase 4 Execution Prompt received; explicit approvals: evidence-folder deletion, one docs-only commit+push, Reviews API build (hybrid eligibility), 8–12 tests, frontend wiring. **Code commits for the Phase-4 build = NOT approved (separate approval at Phase-4 report).**
+
+**STEP 1a — EVIDENCE CLEANUP DONE (explicitly approved):**
+- Pre-deletion proof: file LISTS of `audit-evidence-backup-2026-10-14/` vs `D:\amore-evidence-backup-2026-10-14\` = **118 vs 118, IDENTICAL**; full SHA-256 of every file generated on both sides with the same method → `diff` **exit 0, 0 lines** = **every hash identical → zero unique evidence existed only inside the repo.**
+- `rm -rf audit-evidence-backup-2026-10-14` executed → `REPO_FOLDER_GONE` verified; **D: copy re-counted AFTER deletion = 118 files intact**; git status unaffected (folder was ignored/never tracked); `.gitignore` rule kept (harmless, protects any future backup folder).
+- Consequence note: the ONLY remaining evidence copy is now `D:\amore-evidence-backup-2026-10-14\` — losing/deleting the D: drive copy would now be unrecoverable; recommend keeping it until project close.
+
+**STEP 1b — this docs commit** (`docs: record phase 3 and phase 4 start notes`) carries the Phase-3 hash record (previously uncommitted) + this Phase-4 start entry + push, per the prompt.
+
+**Approved Phase-4 build scope (NEXT):** HYBRID eligibility = `(status=CONFIRMED AND end_time < now) OR status=COMPLETED` · `GET /api/reviews` (public, service+stylist names, limit/pagination, empty-state) · `POST /api/reviews` (bearer, ownership, eligibility → 409 / ownership → 403, rating 1–5, comment ≤1000, `UQ_reviews_booking` duplicate → 409, transactions, clean errors) · 8–12 tests · full suite on `SalonBooking_Test` (0 failures + isolation) · frontend `reviews.js` → real GET + honest empty state ("No reviews yet — be the first!") + submission UI for eligible bookings (My Visits integration) · Phase-4 report at the end, NO code commit without separate approval.
 
 ---
 
@@ -15,7 +30,16 @@
 
 **PRE-VERIFY for STEP 5 (CI parity proof):** exact DB-less subset run locally with the env secret REMOVED (`env -u AMORE_TOKEN_SECRET ./mvnw -B test -Dtest='TokenServiceTest,AvailabilityServiceSlotMathTest,BookingServiceRaceTest,RateLimitServiceTest,RateLimitInterceptorTest,RateLimitEndpointScopingTest,GlobalExceptionHandlerTest'`) → **Tests run: 41, Failures: 0, Errors: 0, BUILD SUCCESS, exit 0**, with **0 Spring context boots** (the 4 @SpringBootTest classes — Auth/Booking/Legacy/Context — correctly excluded). CI-compat inspection: `backend/mvnw` tracked mode **100644 (NOT executable)** → workflow must invoke `sh mvnw`; wrapper `distributionType=only-script` (self-downloads Maven, no jar needed); surefire argLine references `dev-tls12-legacy.security` (tracked ✔) and `lib/` (absent on CI = harmless for DB-less tests); TokenServiceTest builds its own `AuthProperties(SECRET,…)` literal → no env needed.
 
-**PENDING in this phase (commit hashes recorded on next update, per docs-sync rule):** STEP 4 = stage ONLY `.gitignore` + `README.md` + `PROJECT-NOTES.md` → commit `docs: update test counts, rate-limiting status, and project notes` → push. STEP 5 = create `.github/workflows/maven.yml` (DB-less, Java 21, `sh mvnw`, 41 tests, zero secrets) → commit `ci: add lightweight db-less maven test workflow` → push → then check the ACTUAL GitHub Actions run (CI is not "operational" until a real run is green, and it only runs after push).
+**STEP 4 — DONE, COMMITTED + PUSHED:** staged EXACTLY `.gitignore` + `README.md` + `PROJECT-NOTES.md` (verified; `git diff --cached --check` exit 0; staged scan = 1 false-positive only) → **`0162911` "docs: update test counts, rate-limiting status, and project notes"** (3 files, +39/−9) → pushed `047988f..0162911`, exit 0. Commit message has NO bot/AI tags or trailers, per the prompt's explicit "zero watermarks" directive (user declined attribution — master prompt's footer rule suspended accordingly).
+
+**STEP 5 — DONE, COMMITTED + PUSHED + CI VERIFIED GREEN:**
+- `.github/workflows/maven.yml` CREATED (36 lines): `ubuntu-latest` · `actions/checkout@v4` · `actions/setup-java@v4` (temurin 21, maven cache) · `permissions: contents: read` · push+PR triggers · runs `sh mvnw -B test -Dtest='…7 classes…'` from `backend/` — **no secrets, no database, no Windows deps**. YAML parse-checked locally (`npx js-yaml`, exit 0).
+- **`72e274f` "ci: add lightweight db-less maven test workflow"** (1 file, +36) → pushed `0162911..72e274f`, exit 0.
+- **ACTUAL RUN VERIFIED (public GitHub API):** run #1 `CI` on head `72e274f`, event push, job `unit-tests` → **status completed, conclusion SUCCESS** (08:09:33Z → 08:10:03Z ≈ 30 s); workflow file served from `main` (HTTP 200); workflow state `active`. Run: `https://github.com/taniyamohammad77/hair-salon-appointment-booking-website/actions/runs/39745668534`. **CI is therefore OPERATIONAL** (claim backed by the actual green run, not just config).
+
+**End-of-phase Git state:** HEAD `72e274f` = origin/main (**0/0**); today's three commits all pushed; working tree: ` M PROJECT-NOTES.md` only (this hash record — a docs-only follow-up commit is offered to the user), sneha fully ignored, evidence folder untouched, nothing deleted.
+
+**Remaining open items after Phase 3:** in-repo `audit-evidence-backup-2026-10-14/` deletion (explicit approval still required; D: copy exists 118 files) · GitHub Pages decision (currently OFF/404; localhost API hardcoded ⇒ static hosting = honest-fallback only) · full-72-test CI option (needs SQL-auth container) · Phase 4 Reviews API (blocked on COMPLETED-status rule) · Phase 5 email verification · Phase 6 production · Phase 7 brand.
 
 ---
 
