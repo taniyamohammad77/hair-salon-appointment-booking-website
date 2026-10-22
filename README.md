@@ -13,8 +13,10 @@ Static frontend (HTML/CSS/JS)  →  REST API (Spring Boot)  →  JPA/Hibernate  
 ## Status: local development ready — NOT a production deployment
 
 Verified working locally: booking flow, authentication, booking ownership,
-and the legacy-booking visibility gate (live-audited). **Not implemented — do
-not assume:** reviews API, rate limiting, automated email-verification flow
+the legacy-booking visibility gate (live-audited), and **per-IP rate limiting**
+on login/signup/booking writes (30/10/30 per minute, trusted-proxy XFF guard,
+`Retry-After` on 429 — unit-verified, full suite green). **Not implemented — do
+not assume:** reviews API, automated email-verification flow
 (the salon flips `users.email_verified` manually), HTTPS, production hosting,
 GitHub Pages serving.
 
@@ -130,7 +132,8 @@ errors are honest 401/400 responses; passwords are never echoed or logged.
   user's own post-signup bookings are always visible.
 
 **Errors:** 400 validation (+ `fields`), 404 unknown id, 409 slot already
-taken (frontend reloads slots) — always clean `{"error": "friendly message"}`.
+taken (frontend reloads slots), 429 rate-limited writes (with a standard
+`Retry-After` header) — always clean `{"error": "friendly message"}`.
 
 ## How double-booking is impossible (3 layers)
 
@@ -152,8 +155,9 @@ cd backend
 # 1. compile main + test sources (offline, no DB):
 ./mvnw -o test-compile
 
-# 2. unit tests (no database, no Spring context):
-./mvnw -o test -Dtest='TokenServiceTest,AvailabilityServiceSlotMathTest,BookingServiceRaceTest'
+# 2. unit tests (no database, no Spring context, no env secret needed — also
+#    what CI runs on every push/PR):
+./mvnw -o test -Dtest='TokenServiceTest,AvailabilityServiceSlotMathTest,BookingServiceRaceTest,RateLimitServiceTest,RateLimitInterceptorTest,RateLimitEndpointScopingTest,GlobalExceptionHandlerTest'
 
 # 3. full suite (needs local SQL Server AND AMORE_TOKEN_SECRET set):
 ./mvnw -o test
@@ -195,7 +199,7 @@ backend/
 ├── src/main/resources/
 │   ├── application.yml         ← DB connection + ${AMORE_TOKEN_SECRET:}
 │   └── data.sql                ← idempotent seed (services/stylists/shifts)
-├── src/test/java/com/salon/    ← 49 tests (unit + integration)
+├── src/test/java/com/salon/    ← 72 tests (unit + integration)
 ├── run-dev.sh / run-dev.cmd    ← start with the correct JVM flags
 └── dev-tls12-legacy.security   ← dev-only TLS override
 start-frontend.cmd · serve-frontend.js · package.json   ← frontend dev server (:8081)
@@ -207,7 +211,8 @@ What works today is **localhost only**: Windows-auth DB on 127.0.0.1, CORS
 restricted to `localhost:*`, no HTTPS, secret from a local environment
 variable. A production launch would additionally require: a remote DB with
 `encrypt=true` + real credentials, HTTPS/TLS termination, the secret in a
-proper secret store, rate limiting, the reviews API, an email-verification
+proper secret store, a shared rate-limit store for multiple instances
+(currently in-memory, single instance), the reviews API, an email-verification
 flow, and a hosting decision — **none of those exist yet**.
 
 Design references: `ER-DIAGRAM.md` (schema + constraints + traps),

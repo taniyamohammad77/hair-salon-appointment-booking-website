@@ -21,3 +21,6 @@ audit-evidence-backup-*/
 # Local environment files
 .env
 .env.*
+
+# Unrelated coursework kept locally (never staged, never deleted — user files)
+frontend/sneha/

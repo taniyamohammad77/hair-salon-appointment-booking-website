@@ -1,11 +1,27 @@
 # HAIR SALON BOOKING SYSTEM — PROJECT REFERENCE
-### Last updated: October 22, 2026 (PHASE 2 COMPLETE — rate limiter hardened: Retry-After header on 429, periodic stale-window sweep, XFF guard pinned by tests; suite 72/72 exit 0 on isolated DB; scans clean; **TESTED — NOT COMMITTED**, awaiting separate commit approval) · Keep this file — it is the working plan
+### Last updated: October 22, 2026 (PHASE 3 IN PROGRESS — 047988f PUSHED to origin/main; `frontend/sneha/` gitignored; README corrected (72 tests + rate-limiting verified); DB-less CI subset proven 41/41 with NO secret; docs commit + CI workflow commit queued, hashes to be recorded on next update) · Keep this file — it is the working plan
+
+---
+
+## 0. WORK LOG — October 22, 2026 (PHASE 3: REPOSITORY HOUSEKEEPING + CLEAN COMMITS & CI)
+
+**Status: IN PROGRESS** — Phase 3 Execution Prompt received with EXPLICIT approvals for: push of `047988f`, gitignoring `frontend/sneha/`, README/notes docs updates, a docs commit + push, and a DB-less CI workflow commit + push. No file deletion approved (evidence folder untouched); sneha files neither staged nor deleted.
+
+**STEP 1 — push DONE:** `git push origin main` → `3295193..047988f  main -> main`, exit 0; verified `origin/main` = `047988f`, local↔remote **0/0**. Note (transparency): `047988f`'s message carries the Codebuff trailer from the Phase 2a commit the user approved; rewriting it would require a forbidden force-push, so it was pushed verbatim as instructed — the Phase-3 commits carry NO bot/AI tags per the prompt's explicit "zero watermarks" directive.
+
+**STEP 2 — coursework ignore DONE:** root `.gitignore` gained `frontend/sneha/` (comment: user files — never staged, never deleted). Verified `git check-ignore -v` → `.gitignore:26:frontend/sneha/` matches; `git status` no longer lists the 74 coursework files. **Files remain fully intact on disk — nothing deleted, nothing staged.**
+
+**STEP 3 — README corrected (5 edits):** ① Status section: rate limiting moved from "Not implemented" to verified (30/10/30 + XFF guard + Retry-After — "unit-verified, full suite green"); reviews API / email-verification / HTTPS / hosting / Pages still listed NOT implemented; ② API errors line now documents `429 rate-limited writes (with Retry-After)`; ③ Testing section's unit command expanded to the full DB-less 7-class list + note that CI runs it; ④ "49 tests" → "72 tests"; ⑤ production paragraph: "rate limiting" → "a shared rate-limit store for multiple instances (currently in-memory, single instance)".
+
+**PRE-VERIFY for STEP 5 (CI parity proof):** exact DB-less subset run locally with the env secret REMOVED (`env -u AMORE_TOKEN_SECRET ./mvnw -B test -Dtest='TokenServiceTest,AvailabilityServiceSlotMathTest,BookingServiceRaceTest,RateLimitServiceTest,RateLimitInterceptorTest,RateLimitEndpointScopingTest,GlobalExceptionHandlerTest'`) → **Tests run: 41, Failures: 0, Errors: 0, BUILD SUCCESS, exit 0**, with **0 Spring context boots** (the 4 @SpringBootTest classes — Auth/Booking/Legacy/Context — correctly excluded). CI-compat inspection: `backend/mvnw` tracked mode **100644 (NOT executable)** → workflow must invoke `sh mvnw`; wrapper `distributionType=only-script` (self-downloads Maven, no jar needed); surefire argLine references `dev-tls12-legacy.security` (tracked ✔) and `lib/` (absent on CI = harmless for DB-less tests); TokenServiceTest builds its own `AuthProperties(SECRET,…)` literal → no env needed.
+
+**PENDING in this phase (commit hashes recorded on next update, per docs-sync rule):** STEP 4 = stage ONLY `.gitignore` + `README.md` + `PROJECT-NOTES.md` → commit `docs: update test counts, rate-limiting status, and project notes` → push. STEP 5 = create `.github/workflows/maven.yml` (DB-less, Java 21, `sh mvnw`, 41 tests, zero secrets) → commit `ci: add lightweight db-less maven test workflow` → push → then check the ACTUAL GitHub Actions run (CI is not "operational" until a real run is green, and it only runs after push).
 
 ---
 
 ## 0. WORK LOG — October 22, 2026 (later — PHASE 2: RATE LIMITER & SECURITY HARDENING)
 
-**Status: IMPLEMENTED + TESTED · NOT COMMITTED / NOT PUSHED (commit = separate approval, per master prompt).** Phase 2 approval received via the pasted Phase 2 Execution Prompt; scope = verify + minor-harden the Oct 21 uncommitted rate limiter, no commit/push/deploy.
+**Status: COMMITTED (local only) — see UPDATE below · NOT PUSHED.** Phase 2 approval received via the pasted Phase 2 Execution Prompt; scope = verify + minor-harden the Oct 21 uncommitted rate limiter, no commit/push/deploy.
 
 ### What was done (by step)
 **STEP 1 — code gaps closed (3 files touched):**
@@ -33,6 +49,12 @@
 **STEP 3 — security verification:** PII/secret scan over the full uncommitted diff + all 6 rate-limit files (emails / 64-hex / password literals, excluding synthetic example.com) = **0 hits**. 429 body = single generic literal asserted by test; `GlobalExceptionHandler` logs only on the unexpected-500 path — 429 path never logs or returns internals. XFF spoof guard already proven live Oct 21 + now unit-pinned (3 layers).
 
 **STEP 4 — documentation + diff:** this entry written; exact `git diff` generated and presented in the Phase 2 report. **Nothing staged, nothing committed, nothing pushed, no server started, no DB change, no file deleted.**
+
+### ⬆️ UPDATE (October 22, 2026 — PHASE 2a: COMMIT EXECUTED after explicit approval)
+- User approved ("APPROVE PHASE 2"). Pre-commit gates: exactly **12-file allowlist staged** (4 modified + 8 new; `frontend/sneha/` and evidence folder excluded — verified `git status` showed only `?? frontend/sneha/` unstaged), `git diff --cached --check` **exit 0**, staged-content secret/PII scan = **clean** (3 hits = documented fictional `hello@aurelia-salon.com` ×2 + the word phrase "forgot-password = informational" — both false positives), env-ref `token-secret: "${AMORE_TOKEN_SECRET:}"` confirmed intact in the staged yml (count 1).
+- **COMMIT `047988f` "Add per-IP rate limiting with a trusted-proxy XFF guard"** — 12 files, +1668/−1, exit 0. Parent = `3295193`. **Local main is now 1 commit ahead of origin/main — NOT pushed (push = separate approval).**
+- Post-commit status: working tree clean except untracked `frontend/sneha/`. This hash line necessarily re-dirties PROJECT-NOTES.md → docs-only follow-up commit offered (user decision).
+- README correction (49 tests → 72, "rate limiting not implemented") **NOT included** — user did not request it; remains an open item for a later approved commit.
 
 ### Working-tree state (end of Phase 2)
 - Modified tracked: `ApiException.java` (retry-after field+factory) · `GlobalExceptionHandler.java` (header attach) · `WebConfig.java` (interceptor registration, from Oct 21) · `application.yml` (rate-limit block, from Oct 21)
