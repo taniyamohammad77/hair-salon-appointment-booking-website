@@ -36,7 +36,14 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(ApiException.class)
 	public ResponseEntity<ErrorResponse> handleApiException(ApiException ex) {
-		return ResponseEntity.status(ex.getStatus()).body(ErrorResponse.of(ex.getMessage()));
+		ResponseEntity.BodyBuilder builder = ResponseEntity.status(ex.getStatus());
+		// SECURITY: 429 rate-limit responses advertise when to retry (RFC 9110).
+		// The value is seconds-to-reset only — no internals are ever exposed.
+		Long retryAfter = ex.getRetryAfterSeconds();
+		if (retryAfter != null) {
+			builder.header("Retry-After", String.valueOf(retryAfter));
+		}
+		return builder.body(ErrorResponse.of(ex.getMessage()));
 	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)

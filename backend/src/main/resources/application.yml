@@ -31,6 +31,21 @@ salon:
   # Slot grid for the availability engine (Phase 2)
   slot-step-minutes: 15
 
+  # SECURITY — per-IP fixed-window limits on sensitive WRITE endpoints only
+  # (login / signup / create / cancel / reschedule). Generous by design: far
+  # above human/demo use, low enough to stop credential-stuffing probes.
+  # Public GET catalogue/availability and My Visits reads are NOT limited.
+  rate-limit:
+    login-per-minute: 30
+    signup-per-minute: 10
+    booking-per-minute: 30
+    mutation-per-minute: 30
+    # SECURITY — comma-separated IPs allowed to supply X-Forwarded-For.
+    # Empty (local demo, no proxy in front) = the header is IGNORED and the
+    # limiter keys on the real TCP peer, so clients cannot spoof their IP.
+    # Only set this to your reverse proxy's address (never a wildcard).
+    trusted-proxies: ""
+
   auth:
     # AUTH PHASE 2 — HMAC-SHA256 signing secret for bearer tokens.
     # DEV-ONLY value; if this ever leaves localhost, move it to an

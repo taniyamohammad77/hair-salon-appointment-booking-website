@@ -3,6 +3,7 @@ package com.salon.config;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
@@ -13,6 +14,20 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 @EnableConfigurationProperties({ SalonProperties.class, AuthProperties.class })
 public class WebConfig implements WebMvcConfigurer {
+
+	private final RateLimitInterceptor rateLimitInterceptor;
+
+	public WebConfig(RateLimitInterceptor rateLimitInterceptor) {
+		this.rateLimitInterceptor = rateLimitInterceptor;
+	}
+
+	/** SECURITY: rate-limit the sensitive WRITE endpoints only; public
+	 *  catalogue/availability reads and GET /api/bookings stay open. */
+	@Override
+	public void addInterceptors(InterceptorRegistry registry) {
+		registry.addInterceptor(rateLimitInterceptor)
+				.addPathPatterns("/api/auth/login", "/api/auth/signup", "/api/bookings/**");
+	}
 
 	@Override
 	public void addCorsMappings(CorsRegistry registry) {
