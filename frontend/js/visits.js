@@ -9,6 +9,13 @@
    bearer token attached automatically by api.js — and cancel/reschedule
    carry the token too (backend enforces ownership).
 
+   PHASE 4 (reviews): REAL rows for finished visits also offer a "Leave a
+   review" form — eligibility hint follows the backend's HYBRID rule
+   (CONFIRMED + already ended, or COMPLETED); the server re-validates
+   everything, so a 409/403 is surfaced honestly, never worked around.
+   Sample rows NEVER offer the form: sample bookings are not real and the
+   backend would refuse them anyway.
+
    HONESTY RULES (user rule 5/10):
      - API unavailable → documented sample fallback (seed + session rows for
        the ACCOUNT email), announced with an honest banner + "(sample data)"
@@ -133,6 +140,49 @@
 		return !isUpcoming(b);
 	}
 
+	/* ---------- PHASE 4 — review eligibility (hybrid rule, client hint) -----
+	   Mirrors the backend: a visit may be reviewed when (CONFIRMED AND the
+	   appointment has already ended) OR status = COMPLETED. Cancelled and
+	   no-show visits never qualify. The backend re-checks ownership,
+	   eligibility and duplicates — this only decides whether to SHOW the
+	   form. Sample data never gets one (see honesty rules above). */
+	function isReviewEligible(b) {
+		if (b.status === "COMPLETED") { return true; }
+		return b.status === "CONFIRMED" && isPastOrDone(b);
+	}
+
+	function starPickerHtml(id) {
+		var html = "";
+		for (var i = 1; i <= 5; i++) {
+			html +=
+				'<input class="star-radio" type="radio" id="review-star-' + id + "-" + i +
+				'" name="review-rating-' + id + '" value="' + i + '" />' +
+				'<label class="star-choice" for="review-star-' + id + "-" + i +
+				'" title="' + i + " star" + (i === 1 ? "" : "s") + '">&#9733;</label>';
+		}
+		return html;
+	}
+
+	function reviewRowHtml(id) {
+		return (
+			'<div class="visit-review" data-review-row="' + id + '" hidden>' +
+			'<span class="field-label" id="review-rating-label-' + id + '">Your rating</span>' +
+			'<div class="star-picker" role="radiogroup" aria-labelledby="review-rating-label-' + id + '">' +
+			starPickerHtml(id) +
+			"</div>" +
+			'<label class="field-label" for="review-comment-' + id + '">Your review ' +
+			'<span class="field-hint">(optional, up to 1000 characters)</span></label>' +
+			'<textarea id="review-comment-' + id + '" data-review-comment="' + id +
+			'" maxlength="1000" rows="3" placeholder="How was your visit?"></textarea>' +
+			'<p class="field-error" data-review-error="' + id + '" hidden></p>' +
+			'<div class="visit-actions">' +
+			'<button class="btn btn-accent" type="button" data-submit-review="' + id + '">Post review</button>' +
+			'<button class="btn btn-ghost" type="button" data-close-review="' + id + '">Close</button>' +
+			"</div>" +
+			"</div>"
+		);
+	}
+
 	/* ---------- rendering ---------- */
 	function statusBadge(status) {
 		var cls = "status-badge";
@@ -155,6 +205,13 @@
 				'<button class="btn btn-ghost" type="button" data-reschedule="' + b.id + '">Reschedule</button>' +
 				'<button class="btn btn-accent" type="button" data-cancel="' + b.id + '">Cancel</button>' +
 				"</div>";
+		} else if (dataSource === "api" && isReviewEligible(b)) {
+			// PHASE 4: finished visit + real data → offer the review form
+			actions =
+				'<div class="visit-actions">' +
+				'<button class="btn btn-ghost" type="button" data-review="' + b.id + '">Leave a review</button>' +
+				"</div>" +
+				reviewRowHtml(b.id);
 		}
 
 		card.innerHTML =
@@ -292,6 +349,20 @@
 		}
 		if (btn.hasAttribute("data-confirm-reschedule")) {
 			confirmReschedule(Number(btn.getAttribute("data-confirm-reschedule")));
+			return;
+		}
+		if (btn.hasAttribute("data-review")) {
+			var rid = btn.getAttribute("data-review");
+			resultWrap.querySelector('[data-review-row="' + rid + '"]').hidden = false;
+			return;
+		}
+		if (btn.hasAttribute("data-close-review")) {
+			var rid2 = btn.getAttribute("data-close-review");
+			resultWrap.querySelector('[data-review-row="' + rid2 + '"]').hidden = true;
+			return;
+		}
+		if (btn.hasAttribute("data-submit-review")) {
+			submitReview(Number(btn.getAttribute("data-submit-review")), btn);
 		}
 	});
 
@@ -413,6 +484,18 @@
 	}
 
 	resultWrap.addEventListener("change", function (e) {
+		// PHASE 4: star picker — highlight the chosen rating and those before it
+		var star = e.target.closest(".star-radio");
+		if (star) {
+			var group = star.closest(".star-picker");
+			var chosen = Number(star.value);
+			var labels = group ? group.querySelectorAll(".star-choice") : [];
+			labels.forEach(function (label, idx) {
+				label.classList.toggle("is-filled", idx < chosen);
+			});
+			return;
+		}
+
 		var input = e.target.closest("[data-reschedule-date]");
 		if (!input) { return; }
 		var id = Number(input.getAttribute("data-reschedule-date"));
@@ -545,6 +628,63 @@
 		}
 		announce("Sample visit moved to " + newDate + " at " + reschedulePick[id] + ".");
 		renderFromRows(sampleRowsFor(currentEmail), "sample");
+	}
+
+	/* ---------- PHASE 4 — review submission (real rows only) ----------
+	   POST /api/reviews with the bearer token (api.js attaches it). Client
+	   checks only what the form can check (rating chosen, comment length);
+	   ownership/eligibility/duplicates are the backend's job and every
+	   refusal is shown honestly, never retried or hidden.                 */
+	function submitReview(id, btn) {
+		var row = resultWrap.querySelector('[data-review-row="' + id + '"]');
+		if (!row) { return; }
+		var err = row.querySelector('[data-review-error="' + id + '"]');
+		var commentEl = row.querySelector('[data-review-comment="' + id + '"]');
+		err.hidden = true;
+
+		var checked = row.querySelector('input[name="review-rating-' + id + '"]:checked');
+		if (!checked) {
+			err.textContent = "Please choose a rating from 1 to 5 stars.";
+			err.hidden = false;
+			return;
+		}
+		var rating = Number(checked.value);
+		var comment = commentEl ? commentEl.value.trim() : "";
+		if (comment.length > 1000) {
+			err.textContent = "Keep your review under 1000 characters.";
+			err.hidden = false;
+			return;
+		}
+
+		btn.disabled = true;
+		btn.setAttribute("aria-busy", "true");
+
+		window.AMORE_API.request("POST", "/api/reviews", {
+			body: { bookingId: id, rating: rating, comment: comment || null }
+		}).then(function (res) {
+			btn.disabled = false;
+			btn.removeAttribute("aria-busy");
+
+			if (res.ok) {
+				row.innerHTML = '<p class="confirm-text">Thank you \u2014 your review is now live.</p>';
+				var trigger = resultWrap.querySelector('[data-review="' + id + '"]');
+				if (trigger) { trigger.parentNode.removeChild(trigger); }
+				announce("Review posted \u2014 thank you for sharing.");
+				return;
+			}
+			if (res.status === 401) {
+				// dead/expired token — api.js already cleared the session
+				err.textContent = "Your session has expired \u2014 log in again to leave a review.";
+				err.hidden = false;
+				announce("Session expired \u2014 please log in again to leave a review.");
+				return;
+			}
+			// 400 validation · 403 not your booking · 409 not finished /
+			// already reviewed — the backend's honest message, shown as-is.
+			err.textContent = res.error || "Posting your review failed \u2014 nothing was posted.";
+			err.hidden = false;
+			announce(err.textContent);
+		});
 	}
 
 	/* ======================================================================

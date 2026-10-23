@@ -1,5 +1,29 @@
 # HAIR SALON BOOKING SYSTEM — PROJECT REFERENCE
-### Last updated: October 22, 2026 (PHASE 4 STARTED — in-repo evidence folder DELETED after 118/118 SHA-256 identity proof vs D: copy; hybrid Reviews API build in progress per Phase 4 Execution Prompt; docs commit `docs: record phase 3 and phase 4 start notes` = this entry) · Keep this file — it is the working plan
+### Last updated: October 22, 2026 (PHASE 4 BUILD COMPLETE — backend Reviews API + 12 tests + 84/84 suite (earlier today) + reviews.js real-API wiring + My Visits submission UI + docs, ALL UNCOMMITTED awaiting explicit commit approval; no AI watermarks anywhere) · Keep this file — it is the working plan
+
+---
+
+## 0. WORK LOG — October 22, 2026 (PHASE 4: REVIEWS FRONTEND WIRING + SUBMISSION UI — Pending Tasks Prompt)
+
+**Status: BUILD COMPLETE — NOT COMMITTED, NOTHING STAGED (separate commit approval still required). NO AI/bot tags, trailers or watermark strings in any file.** Scope = only the remaining ~35% frontend/docs items of Phase 4; backend untouched this session.
+
+**STEP 1 — `frontend/js/reviews.js` WIRED TO REAL API (full rewrite; carousel logic preserved):**
+- Data source = `GET /api/reviews` through `js/api.js` (page never hardcodes URLs / calls fetch directly). Honest states: loading note → real reviews (count = whatever the API returns — NEVER hardcoded to 6) → honest empty state ("No reviews yet — be the first to share one after your visit!") on 0 rows, with NO fabricated testimonials → DEV-ONLY `SAMPLE_REVIEWS` fallback rendered BEHIND the preview banner (now `hidden` by default in index.html) when the API is unreachable. No API + no samples → honest "unavailable" note, never fake content.
+- Card hardened for real data: optional `comment` (quote only when present), masked `guestName` defaulting to "Guest", meta shows `serviceName · stylistName` when available. Carousel behaviour unchanged (one-card auto-move, seamless clone loop, hover/focus pause, `prefers-reduced-motion` → static grid); `setupCarousel()` runs exactly once, after data arrives.
+
+**STEP 2 — MY VISITS REVIEW SUBMISSION UI (`visits.js` + `my-visits.html` + one new CSS block in `style.css`):**
+- "Leave a review" button + inline form shown ONLY on REAL rows (`dataSource === "api"`) passing the HYBRID eligibility hint (`status === "COMPLETED"` OR `status === "CONFIRMED"` with `endTime` already past); cancelled/no-show never qualify; sample rows never get the form (sample bookings aren't real — the backend would refuse them anyway).
+- Form: 1–5 star radiogroup (native radios visually hidden + `.star-choice` labels — keyboard/ARIA intact), optional textarea `maxlength=1000`, client checks (rating required, ≤1000 chars), busy state during submit.
+- `POST /api/reviews` via `AMORE_API.request` (bearer auto-attached). Refusals surfaced honestly, as-is: 401 → "session expired — log in again" (api.js already cleared the dead session) · 403 own-bookings-only (generic, no existence leak) · 409 not-finished / already-reviewed · 400 validation · network → honest generic. Success → inline "Thank you — your review is now live." + trigger button removed (blocks double-post).
+- Copy: my-visits section note now mentions reviewing finished visits. CSS added: `.visit-review`, `.star-picker`/`.star-radio`/`.star-choice`, `.field-hint` — existing design tokens only.
+
+**STEP 3 — DOCS:** README 5 edits — status section: reviews API = **fully implemented & verified** (hybrid rule documented, 84/84 suite) and removed from the "not implemented" list · public table gains `GET /api/reviews?limit=` (clamped 1–50, masked names) · authenticated table gains `POST /api/reviews` · errors line documents review 409s · "72 tests" → "84 tests" · production-gap list no longer names the reviews API. This entry = the PROJECT-NOTES update.
+
+**STEP 4 — CLEAN TREE CHECK:** `node --check` on modified `reviews.js` + `visits.js` = PASS. Working tree (ALL uncommitted, unstaged): 2 modified tracked from earlier today (`PublicController.java`, `index.html`) + 6 new backend files (Review{Entity,Repository,Request,Response,Service} + ReviewApiIntegrationTest) + `reviews.js` / `visits.js` / `style.css` / `my-visits.html` / `README.md` / this file. Zero bot/AI tags or trailers anywhere.
+
+**Honest verification state:** backend unchanged this session — the 84/84 (0 failures) full-suite run from 14:53 today stands; the 12 new ReviewApiIntegrationTest cases green. Frontend wiring = syntax-checked only; live browser QA of the reviews flow NOT yet executed (servers down) — recommended as the first check after this close-out.
+
+**STEP 5 — COMMIT APPROVAL RECEIVED (Final Phase-4 Commit & Close-Out Prompt, ZERO watermarks):** pre-commit gates verified — working tree = EXACTLY 14 files (8 modified: PROJECT-NOTES.md · README.md · PublicController.java · style.css · index.html · reviews.js · visits.js · my-visits.html + 6 new: ReviewRequest · ReviewResponse · ReviewEntity · ReviewRepository · ReviewService · ReviewApiIntegrationTest); git identity = the standard local user (no bot identity); `git config -l` scan = no templates / co-author / bot entries; no active hooks; file-content watermark scan clean (sole grep hit = the pre-existing Oct-22 transparency line about the old `047988f` trailer, not created today). Commit = `feat(reviews): integrate real reviews API and My Visits submission UI` — allowlist-staged, plain message, NO bot/AI tags or trailers — then push to origin/main per explicit approval; the exact hash is authoritative in `git log`.
 
 ---
 

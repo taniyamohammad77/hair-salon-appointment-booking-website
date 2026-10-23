@@ -13,10 +13,15 @@ Static frontend (HTML/CSS/JS)  →  REST API (Spring Boot)  →  JPA/Hibernate  
 ## Status: local development ready — NOT a production deployment
 
 Verified working locally: booking flow, authentication, booking ownership,
-the legacy-booking visibility gate (live-audited), and **per-IP rate limiting**
+the legacy-booking visibility gate (live-audited), **per-IP rate limiting**
 on login/signup/booking writes (30/10/30 per minute, trusted-proxy XFF guard,
-`Retry-After` on 429 — unit-verified, full suite green). **Not implemented — do
-not assume:** reviews API, automated email-verification flow
+`Retry-After` on 429 — unit-verified), and the **reviews API — fully
+implemented and verified** (public `GET /api/reviews` + authenticated
+`POST /api/reviews` over the hybrid completion rule: a visit is reviewable
+when it is CONFIRMED and has already ended, or was marked COMPLETED. The
+homepage renders real reviews with an honest empty state; My Visits posts
+them. Full suite: 84/84 green, 0 failures). **Not implemented — do
+not assume:** automated email-verification flow
 (the salon flips `users.email_verified` manually), HTTPS, production hosting,
 GitHub Pages serving.
 
@@ -97,6 +102,7 @@ All JSON under `/api`.
 | GET | `/services` · `/services/{id}` | service catalogue |
 | GET | `/stylists?serviceId=` | stylists, optionally per service |
 | GET | `/availability?serviceId=&stylistId=&date=` | free start times (all three params required) |
+| GET | `/reviews?limit=` | published reviews, newest first (`limit` clamped 1–50, default 12); guest names are masked server-side |
 
 ### Authentication
 
@@ -119,6 +125,7 @@ errors are honest 401/400 responses; passwords are never echoed or logged.
 | GET | `/bookings?email=` | "My Visits" — **own email only** |
 | PUT | `/bookings/{id}/cancel` | cancel — **owner only** |
 | PUT | `/bookings/{id}/reschedule` | move — **owner only** (body: `date`, `time`) |
+| POST | `/reviews` | review your **own** finished booking — **owner only** (body: `bookingId`, `rating` 1–5, optional `comment` ≤1000 chars) |
 
 **Authorization behavior (live-audited):**
 
@@ -132,7 +139,8 @@ errors are honest 401/400 responses; passwords are never echoed or logged.
   user's own post-signup bookings are always visible.
 
 **Errors:** 400 validation (+ `fields`), 404 unknown id, 409 slot already
-taken (frontend reloads slots), 429 rate-limited writes (with a standard
+taken (frontend reloads slots) / review not open yet / booking already
+reviewed, 429 rate-limited writes (with a standard
 `Retry-After` header) — always clean `{"error": "friendly message"}`.
 
 ## How double-booking is impossible (3 layers)
@@ -199,7 +207,7 @@ backend/
 ├── src/main/resources/
 │   ├── application.yml         ← DB connection + ${AMORE_TOKEN_SECRET:}
 │   └── data.sql                ← idempotent seed (services/stylists/shifts)
-├── src/test/java/com/salon/    ← 72 tests (unit + integration)
+├── src/test/java/com/salon/    ← 84 tests (unit + integration)
 ├── run-dev.sh / run-dev.cmd    ← start with the correct JVM flags
 └── dev-tls12-legacy.security   ← dev-only TLS override
 start-frontend.cmd · serve-frontend.js · package.json   ← frontend dev server (:8081)
@@ -212,8 +220,8 @@ restricted to `localhost:*`, no HTTPS, secret from a local environment
 variable. A production launch would additionally require: a remote DB with
 `encrypt=true` + real credentials, HTTPS/TLS termination, the secret in a
 proper secret store, a shared rate-limit store for multiple instances
-(currently in-memory, single instance), the reviews API, an email-verification
-flow, and a hosting decision — **none of those exist yet**.
+(currently in-memory, single instance), an email-verification flow, and a
+hosting decision — **none of those exist yet**.
 
 Design references: `ER-DIAGRAM.md` (schema + constraints + traps),
 `PHASE-1-DESIGN-PLAN.md` (phase plan).

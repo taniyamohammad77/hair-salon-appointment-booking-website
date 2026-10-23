@@ -159,8 +159,11 @@
 				<p class="section-note reveal">A glimpse of the Amoré experience.</p>
 			</div>
 			<div class="container" data-reviews-region>
-				<!-- preview banner: sample content until the real Reviews API connects -->
-				<p class="preview-note reveal" role="note">Preview — sample reviews shown while we prepare real guest stories.</p>
+				<!-- PHASE 4: real GET /api/reviews first; the preview banner below
+				     appears ONLY for the honest sample-data fallback. -->
+				<p class="preview-note reveal" role="note" data-reviews-banner hidden>Preview — sample reviews shown while we prepare real guest stories.</p>
+				<p class="api-note" role="status" data-reviews-loading></p>
+				<p class="api-note" role="status" data-reviews-empty hidden>No reviews yet — be the first to share one after your visit!</p>
 				<div class="reviews-viewport reveal">
 					<div class="reviews-track" data-reviews-track></div>
 				</div>

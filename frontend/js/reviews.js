@@ -1,32 +1,39 @@
 /* ==========================================================================
-   REVIEWS SECTION (frontend-only) — HOMEPAGE ONLY
+   REVIEWS SECTION — HOMEPAGE (PHASE 4: wired to the real API)
    --------------------------------------------------------------------------
-   Renders 6 DEV-ONLY sample reviews (js/sample-data.js, SAMPLE_REVIEWS) as a
-   premium, subtle auto-moving carousel:
+   Data source: real GET /api/reviews (through js/api.js) when the backend
+   is reachable. Honest states only (user rule 5/10):
+     - loading note while the request is in flight
+     - real reviews -> render whatever length the API returns (NEVER
+       hardcoded to 6), then start the carousel
+     - 0 real reviews -> honest empty state ("No reviews yet — be the
+       first!"), no cards, NO fabricated testimonials
+     - API unavailable -> the documented DEV-ONLY sample fallback
+       (js/sample-data.js, SAMPLE_REVIEWS) behind the honest preview
+       banner — samples are never passed off as real guest stories
 
-     - automatic smooth slide, one card at a time, continuous loop
-     - NO next/previous buttons, NO arrows, NO manual controls, NO pause UI
-     - pause only on hover/focus (needed for keyboard readability, not a
-       visible control)
-     - `prefers-reduced-motion: reduce` -> NO automatic movement: a readable
-       static state instead (CSS handles the visual, JS skips the timer)
-
-   Shape contract: SAMPLE_REVIEWS mirrors the future GET /api/reviews.
-   When the real API connects, render whatever length the API returns —
-   the count must NOT be hardcoded to 6. No backend calls in this file.
+   Carousel behaviour (unchanged): premium, subtle auto-move — one card at
+   a time, continuous loop, NO visible controls; pause on hover/focus for
+   keyboard readability; `prefers-reduced-motion: reduce` -> NO automatic
+   movement, a readable static state instead (CSS handles the visual, JS
+   skips the timer).
    ========================================================================== */
 (function () {
 	"use strict";
 
 	var track = document.querySelector("[data-reviews-track]");
+	var bannerEl = document.querySelector("[data-reviews-banner]");
+	var loadingEl = document.querySelector("[data-reviews-loading]");
+	var emptyEl = document.querySelector("[data-reviews-empty]");
 
-	if (!track || typeof window.SAMPLE_REVIEWS === "undefined" || window.SAMPLE_REVIEWS.length === 0) {
-		return; // section not on this page, or no data
+	if (!track) {
+		return; // reviews section is not on this page
 	}
 
 	var SLIDE_INTERVAL_MS = 4500;
 	var TRANSITION_MS = 600;
 	var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+	var carouselStarted = false;
 
 	/* ---------- helpers ---------- */
 
@@ -52,28 +59,56 @@
 		card.className = "review-card";
 		var titleId = "review-title-" + review.id;
 		card.setAttribute("aria-labelledby", titleId);
-		// Phase 6 fix: cards are focusable so keyboard users can actually enter
-		// the reviews region — that is what makes the existing focusin-pause
-		// reachable (previously the region had NO focusable element, so the
-		// keyboard pause could never trigger).
+		// cards are focusable so keyboard users can actually enter the
+		// reviews region — that is what makes the focusin-pause reachable.
 		card.setAttribute("tabindex", "0");
+
+		// comment is optional on the backend (null allowed) — the quote is
+		// only rendered when the guest actually wrote one.
+		var quote = review.comment
+			? '<blockquote class="review-quote">"' + escapeHtml(review.comment) + '"</blockquote>'
+			: "";
+		// real API data carries BOTH names; the legacy sample shape only
+		// had serviceName — show whatever is honestly available.
+		var metaBits = [];
+		if (review.serviceName) { metaBits.push(escapeHtml(review.serviceName)); }
+		if (review.stylistName) { metaBits.push(escapeHtml(review.stylistName)); }
 
 		card.innerHTML =
 			'<div class="review-stars" role="img" aria-label="Rated ' + review.rating +
 			' out of 5">' + starsHtml(review.rating) + "</div>" +
-			'<blockquote class="review-quote">"' + escapeHtml(review.comment) + '"</blockquote>' +
+			quote +
 			'<footer class="review-meta">' +
-			'<cite class="review-guest" id="' + titleId + '">' + escapeHtml(review.guestName) + "</cite>" +
-			'<span class="review-service">' + escapeHtml(review.serviceName || "") + "</span>" +
+			'<cite class="review-guest" id="' + titleId + '">' + escapeHtml(review.guestName || "Guest") + "</cite>" +
+			(metaBits.length ? '<span class="review-service">' + metaBits.join(" \u00B7 ") + "</span>" : "") +
 			"</footer>";
 
 		return card;
 	}
 
-	function render() {
-		window.SAMPLE_REVIEWS.forEach(function (review) {
+	function renderList(reviews) {
+		track.innerHTML = "";
+		reviews.forEach(function (review) {
 			track.appendChild(cardEl(review));
 		});
+	}
+
+	/* ---------- honest state elements (prepared in index.html) ---------- */
+
+	function hideLoading() {
+		if (loadingEl) { loadingEl.textContent = ""; }
+	}
+
+	function showLoading(text) {
+		if (loadingEl) { loadingEl.textContent = text; }
+	}
+
+	function showEmptyState() {
+		if (emptyEl) { emptyEl.hidden = false; }
+	}
+
+	function showPreviewBanner() {
+		if (bannerEl) { bannerEl.hidden = false; }
 	}
 
 	/* ---------- auto-movement (reviews ONLY — never Services/Stylists) ----------
@@ -119,8 +154,6 @@
 		applyOffset(true);
 		if (index >= track.children.length - visibleCount()) {
 			// reached the cloned first card — snap back to the real start
-			// (Phase 6 fix: was `>`, which parked one EXTRA 4.5s tick on the
-			// visually-identical clone frame and broke the slide rhythm)
 			window.setTimeout(function () {
 				index = 0;
 				applyOffset(false);
@@ -142,21 +175,25 @@
 		}
 	}
 
-	/* ---------- init ---------- */
+	/** Wire the carousel to whatever cards are currently in the track.
+	 *  Runs at most once per page; safe to call after data arrives. */
+	function setupCarousel() {
+		if (carouselStarted) { return; }
+		carouselStarted = true;
 
-	render();
+		if (reducedMotion.matches) {
+			// Static, readable state — CSS also switches the layout for this case.
+			track.classList.add("is-static");
+			return;
+		}
 
-	if (reducedMotion.matches) {
-		// Static, readable state — CSS also switches the layout for this case.
-		track.classList.add("is-static");
-	} else {
 		// Seamless loop: clone the first visible set of cards to the end.
 		var visible = visibleCount();
 		for (var i = 0; i < visible; i++) {
 			var clone = track.children[i].cloneNode(true);
 			clone.setAttribute("aria-hidden", "true");
-			// Phase 6 fixes: clones must not be keyboard-focusable (aria-hidden +
-			// focusable = violation) and must not duplicate the cite's id.
+			// clones must not be keyboard-focusable (aria-hidden + focusable
+			// = violation) and must not duplicate the cite's id.
 			clone.setAttribute("tabindex", "-1");
 			var idEl = clone.querySelector("[id]");
 			if (idEl) {
@@ -195,4 +232,46 @@
 			});
 		}
 	}
+
+	/* ---------- data: real API first, documented sample fallback ---------- */
+
+	/** API unreachable (or the api layer is missing): render the DEV-ONLY
+	 *  samples behind the honest preview banner. Never fake-success. */
+	function useSampleFallback() {
+		hideLoading();
+		if (typeof window.SAMPLE_REVIEWS === "undefined" || window.SAMPLE_REVIEWS.length === 0) {
+			showLoading("Guest reviews are unavailable right now \u2014 please check back soon.");
+			return;
+		}
+		showPreviewBanner();
+		renderList(window.SAMPLE_REVIEWS);
+		setupCarousel();
+	}
+
+	function load() {
+		showLoading("Loading guest reviews\u2026");
+
+		if (typeof window.AMORE_API === "undefined" || !window.AMORE_API.request) {
+			useSampleFallback();
+			return;
+		}
+
+		window.AMORE_API.request("GET", "/api/reviews").then(function (res) {
+			hideLoading();
+			if (res.ok && Array.isArray(res.data)) {
+				if (res.data.length === 0) {
+					// honest empty state — NEVER invented testimonials
+					showEmptyState();
+					return;
+				}
+				renderList(res.data); // count = whatever the API returned
+				setupCarousel();
+				return;
+			}
+			// down / 4xx / 5xx — documented fallback, clearly labelled
+			useSampleFallback();
+		});
+	}
+
+	load();
 })();

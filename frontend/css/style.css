@@ -1676,6 +1676,66 @@ a {
 	border-color: #eadfea;
 }
 
+/* PHASE 4: inline review form inside a finished visit's card (My Visits) */
+.visit-review {
+	flex-basis: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+	border-top: 1px solid var(--line);
+	padding-top: var(--space-2);
+}
+
+.visit-review textarea {
+	width: 100%;
+	padding: 0.65rem 0.8rem;
+	font: inherit;
+	color: var(--ink);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	background: var(--bg);
+	resize: vertical;
+}
+
+.visit-review .field-hint {
+	font-weight: 400;
+	font-size: 0.85rem;
+	color: var(--ink-soft);
+}
+
+.star-picker {
+	position: relative;
+	display: inline-flex;
+	gap: 0.2rem;
+	align-self: flex-start;
+}
+
+/* visually-hidden radios keep native keyboard/ARIA behaviour */
+.star-picker .star-radio {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+}
+
+.star-choice {
+	font-size: 1.5rem;
+	line-height: 1;
+	color: var(--line);
+	cursor: pointer;
+}
+
+.star-choice.is-filled {
+	color: var(--accent);
+}
+
+.star-picker .star-radio:focus-visible + .star-choice {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+}
+
 /* inline reschedule / cancel rows inside a visit card */
 .visit-reschedule,
 .confirm-row {

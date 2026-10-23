@@ -21,12 +21,15 @@ import org.springframework.web.bind.annotation.RestController;
 import com.salon.dto.BookingRequest;
 import com.salon.dto.BookingResponse;
 import com.salon.dto.RescheduleRequest;
+import com.salon.dto.ReviewRequest;
+import com.salon.dto.ReviewResponse;
 import com.salon.dto.ServiceDto;
 import com.salon.dto.StylistDto;
 import com.salon.service.AuthService;
 import com.salon.service.AvailabilityService;
 import com.salon.service.BookingService;
 import com.salon.service.BookingService.BookingOwner;
+import com.salon.service.ReviewService;
 import com.salon.service.ServiceCatalogService;
 import com.salon.service.StylistCatalogService;
 
@@ -45,17 +48,20 @@ public class PublicController {
 	private final StylistCatalogService stylistCatalogService;
 	private final AvailabilityService availabilityService;
 	private final BookingService bookingService;
+	private final ReviewService reviewService;
 	private final AuthService authService;
 
 	public PublicController(ServiceCatalogService serviceCatalogService,
 			StylistCatalogService stylistCatalogService,
 			AvailabilityService availabilityService,
 			BookingService bookingService,
+			ReviewService reviewService,
 			AuthService authService) {
 		this.serviceCatalogService = serviceCatalogService;
 		this.stylistCatalogService = stylistCatalogService;
 		this.availabilityService = availabilityService;
 		this.bookingService = bookingService;
+		this.reviewService = reviewService;
 		this.authService = authService;
 	}
 
@@ -143,6 +149,30 @@ public class PublicController {
 			@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
 			@PathVariable Long id, @Valid @RequestBody RescheduleRequest request) {
 		return bookingService.rescheduleBooking(id, request, requireOwner(authorization));
+	}
+
+	// ---------- reviews (PHASE 4) ----------
+
+	/** PHASE 4 — PUBLIC: published reviews, newest first. {@code limit} is
+	 *  clamped server-side (1–50, default 12); an empty table returns an
+	 *  honest {@code []} — the frontend shows an empty state, never fake
+	 *  testimonials. No token required (same class as the catalogue GETs). */
+	@GetMapping("/reviews")
+	public List<ReviewResponse> listReviews(@RequestParam(required = false) Integer limit) {
+		return reviewService.listReviews(limit);
+	}
+
+	/** PHASE 4 — AUTHENTICATED: review your OWN genuinely-completed booking.
+	 *  Hybrid rule: the appointment has already ended (CONFIRMED) or the
+	 *  salon marked it COMPLETED. 401 no/invalid token · 403 not your booking
+	 *  (same generic message as the legacy gate — no existence leak) · 409
+	 *  not finished / cancelled / already reviewed · 400 bad rating/comment. */
+	@PostMapping("/reviews")
+	@ResponseStatus(HttpStatus.CREATED)
+	public ReviewResponse createReview(
+			@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+			@Valid @RequestBody ReviewRequest request) {
+		return reviewService.createReview(request, requireOwner(authorization));
 	}
 
 	/** Resolves the Bearer token → the account ENTITY (verified flag +
