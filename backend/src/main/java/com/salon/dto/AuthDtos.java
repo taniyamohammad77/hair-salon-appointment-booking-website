@@ -65,4 +65,25 @@ public final class AuthDtos {
 	 *  (PHASE 5A: verified rides along so the UI can hint about legacy rows). */
 	public record AuthResponse(String token, Long id, String name, String email, boolean verified) {
 	}
+
+	/** POST /api/auth/resend-verification — validated like the signup email
+	 *  (same rules, same field-error shape). */
+	public record ResendVerificationRequest(
+			@NotBlank(message = "Email is required.")
+			@Size(max = 160, message = "Email must be 160 characters or fewer.")
+			@Email(message = "Enter a valid email address.")
+			String email) {
+	}
+
+	/** GET /api/auth/verify — success payload. Failures use the standard
+	 *  {error} shape via ApiException (400), never this record.
+	 *  SECURITY: never echoes the token back. */
+	public record VerificationResponse(boolean verified, String message) {
+	}
+
+	/** POST /api/auth/resend-verification — deliberately GENERIC message:
+	 *  identical whether the email exists, is already verified, or is
+	 *  unknown — no account enumeration from the response body. */
+	public record MessageResponse(String message) {
+	}
 }

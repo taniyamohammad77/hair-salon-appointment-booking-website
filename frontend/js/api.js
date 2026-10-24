@@ -13,6 +13,10 @@
      - AMORE_API.getStylists(serviceId) GET /api/stylists[?serviceId=]
    Phase-4 scope (auth):
      - AMORE_API.signup/login/me/logout + sessionStorage session helpers.
+   Phase-5 scope (email verification):
+     - AMORE_API.verifyEmail(token) (GET /api/auth/verify) and
+       AMORE_API.resendVerification(email) (POST /api/auth/resend-verification)
+       — both resolve honestly like every other call here.
        request() attaches the bearer token to EVERY call automatically and
        clears the session on any 401 that carried one (honest expiry
        handling — pages decide the redirect).
@@ -45,6 +49,8 @@
 		signup: signup,
 		login: login,
 		me: me,
+		verifyEmail: verifyEmail,
+		resendVerification: resendVerification,
 		logout: logout,
 		isLoggedIn: isLoggedIn,
 		getToken: getToken,
@@ -191,6 +197,27 @@
 
 	/** GET /api/auth/me → revalidates the token; 200 {id,name,email}. */
 	function me() { return request("GET", "/api/auth/me"); }
+
+	/* ======================================================================
+	   PHASE 5 — EMAIL VERIFICATION (verify.html)
+	   ====================================================================== */
+
+	/** GET /api/auth/verify?token= → 200 {verified:true, message} on success;
+	 *  400 {error} for invalid / already-used / expired links. The token is
+	 *  the credential — no session needed, and it is never stored client-side. */
+	function verifyEmail(token) {
+		return request("GET", "/api/auth/verify?token=" + encodeURIComponent(token));
+	}
+
+	/** POST /api/auth/resend-verification {email} → always the SAME generic
+	 *  {message} from the server (whether the address exists, is already
+	 *  verified, or is unknown — no account enumeration). Rate-limited
+	 *  5/min/IP server-side; 429 arrives as {ok:false,error} with Retry-After. */
+	function resendVerification(email) {
+		return request("POST", "/api/auth/resend-verification", {
+			body: { email: email }
+		});
+	}
 
 	/** Bearer tokens are stateless — logging out is purely local. */
 	function logout() { clearSession(); }

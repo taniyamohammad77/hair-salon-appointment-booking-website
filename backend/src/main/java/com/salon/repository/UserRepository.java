@@ -16,4 +16,8 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
 	Optional<UserEntity> findByEmailIgnoreCase(String email);
 
 	boolean existsByEmailIgnoreCase(String email);
+
+	/** PHASE 5: token lookup for GET /api/auth/verify. Tokens are unique
+	 *  CSPRNG values (64 hex chars), never user-chosen. */
+	Optional<UserEntity> findByVerificationToken(String verificationToken);
 }

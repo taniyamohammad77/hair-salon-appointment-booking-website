@@ -15,6 +15,8 @@ import com.salon.repository.UserRepository;
 
 /**
  * Auth use-cases (auth Phase 2): signup, login, current-user lookup.
+ * PHASE 5: signup issues + dispatches an email-verification token via
+ * {@link VerificationService}.
  *
  * SECURITY invariants:
  *  - Passwords are stored ONLY as BCrypt hashes (default strength 10);
@@ -32,13 +34,20 @@ public class AuthService {
 	private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 	private final UserRepository userRepository;
 	private final TokenService tokenService;
+	private final VerificationService verificationService;
 
-	public AuthService(UserRepository userRepository, TokenService tokenService) {
+	public AuthService(UserRepository userRepository, TokenService tokenService,
+			VerificationService verificationService) {
 		this.userRepository = userRepository;
 		this.tokenService = tokenService;
+		this.verificationService = verificationService;
 	}
 
-	/** Create an account. Duplicate email → 409 (project error shape). */
+	/** Create an account. Duplicate email → 409 (project error shape).
+	 *  PHASE 5: a verification token is stamped onto the entity before the
+	 *  first save (one insert), then the link is dispatched AFTER the commit
+	 *  so the emailed link is already valid when it arrives. Dispatch never
+	 *  throws — a dead SMTP server must not fail the signup itself. */
 	public UserResponse signup(SignupRequest request) {
 		String email = normalize(request.email());
 		if (userRepository.existsByEmailIgnoreCase(email)) {
@@ -49,7 +58,10 @@ public class AuthService {
 		user.setEmail(email);
 		user.setPasswordHash(encoder.encode(request.password()));
 		user.setCreatedAt(LocalDateTime.now());
-		return UserResponse.from(userRepository.save(user));
+		verificationService.issueToken(user);
+		UserEntity saved = userRepository.save(user);
+		verificationService.sendVerificationEmail(saved);
+		return UserResponse.from(saved);
 	}
 
 	/** Verify credentials → bearer token + identity. Anything wrong → 401. */

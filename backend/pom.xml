@@ -51,6 +51,15 @@
 			<artifactId>spring-security-crypto</artifactId>
 		</dependency>
 
+		<!-- PHASE 5: email verification — JavaMailSender for SMTP dispatch.
+		     Only USED when spring.mail.host is configured; with no SMTP
+		     configured the app falls back to the dev-log sender (verification
+		     link written to the backend log) so local flows stay testable. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>com.microsoft.sqlserver</groupId>
 			<artifactId>mssql-jdbc</artifactId>

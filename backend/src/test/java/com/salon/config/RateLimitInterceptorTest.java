@@ -89,7 +89,7 @@ class RateLimitInterceptorTest {
 	@Test
 	void forgedXffRotationThroughPreHandleStillHitsTheLimit() {
 		AtomicLong clock = new AtomicLong(0); // frozen window — no test can flake on a minute rollover
-		RateLimitService limiter = new RateLimitService(1, 1, 1, 1, clock::get);
+		RateLimitService limiter = new RateLimitService(1, 1, 1, 1, 1, clock::get);
 		RateLimitInterceptor interceptor = new RateLimitInterceptor(limiter, ""); // default: zero trusted proxies
 
 		assertTrue(interceptor.preHandle(loginFrom("203.0.113.9", "1.2.3.4"),
@@ -107,7 +107,7 @@ class RateLimitInterceptorTest {
 	@Test
 	void trustedProxyForwardedClientIsLimitedOnItsOwnKey() {
 		AtomicLong clock = new AtomicLong(0);
-		RateLimitService limiter = new RateLimitService(1, 1, 1, 1, clock::get);
+		RateLimitService limiter = new RateLimitService(1, 1, 1, 1, 1, clock::get);
 		RateLimitInterceptor interceptor = new RateLimitInterceptor(limiter, "10.0.0.1");
 
 		// two different clients behind the SAME trusted proxy → independent keys

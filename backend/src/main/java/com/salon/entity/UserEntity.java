@@ -45,6 +45,16 @@ public class UserEntity {
 	@Column(name = "email_verified", nullable = false)
 	private boolean emailVerified;
 
+	/** PHASE 5: single-use email-verification token (CSPRNG, 64 hex chars),
+	 *  issued at signup and consumed by GET /api/auth/verify. Null once
+	 *  verified (or for legacy/manual accounts). Never returned by any API. */
+	@Column(name = "verification_token", length = 64)
+	private String verificationToken;
+
+	/** PHASE 5: when {@link #verificationToken} stops being accepted. */
+	@Column(name = "token_expiry_date")
+	private LocalDateTime tokenExpiryDate;
+
 	@Column(name = "created_at", nullable = false)
 	private LocalDateTime createdAt;
 
@@ -82,6 +92,22 @@ public class UserEntity {
 
 	public void setEmailVerified(boolean emailVerified) {
 		this.emailVerified = emailVerified;
+	}
+
+	public String getVerificationToken() {
+		return verificationToken;
+	}
+
+	public void setVerificationToken(String verificationToken) {
+		this.verificationToken = verificationToken;
+	}
+
+	public LocalDateTime getTokenExpiryDate() {
+		return tokenExpiryDate;
+	}
+
+	public void setTokenExpiryDate(LocalDateTime tokenExpiryDate) {
+		this.tokenExpiryDate = tokenExpiryDate;
 	}
 
 	public LocalDateTime getCreatedAt() {

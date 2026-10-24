@@ -30,7 +30,7 @@ import com.salon.service.RateLimitService;
 class RateLimitEndpointScopingTest {
 
 	/** Every checked bucket rejects immediately (limit 0 → first use = 429). */
-	private final RateLimitService zeroedLimiter = new RateLimitService(0, 0, 0, 0);
+	private final RateLimitService zeroedLimiter = new RateLimitService(0, 0, 0, 0, 0);
 
 	private final RateLimitInterceptor interceptor =
 			new RateLimitInterceptor(zeroedLimiter, ""); // default: no trusted proxies
@@ -44,14 +44,24 @@ class RateLimitEndpointScopingTest {
 	}
 
 	@Test
-	void loginAndSignupAreThrottled() {
-		for (String path : new String[] { "/api/auth/login", "/api/auth/signup" }) {
+	void loginSignupAndResendAreThrottled() {
+		for (String path : new String[] { "/api/auth/login", "/api/auth/signup",
+				"/api/auth/resend-verification" }) {
 			ApiException ex = assertThrows(ApiException.class,
 					() -> interceptor.preHandle(request("POST", path),
 							new MockHttpServletResponse(), null),
 					path + " must be rate-limited");
 			assertEquals(HttpStatus.TOO_MANY_REQUESTS, ex.getStatus(), path);
 		}
+	}
+
+	/** PHASE 5: verify is a public READ (token = credential) and must stay
+	 *  unlimited — only the resend WRITE is throttled. */
+	@Test
+	void verificationReadIsNeverThrottled() {
+		assertTrue(interceptor.preHandle(request("GET", "/api/auth/verify"),
+				new MockHttpServletResponse(), null),
+				"GET /api/auth/verify must stay unlimited");
 	}
 
 	@Test
@@ -92,11 +102,12 @@ class RateLimitEndpointScopingTest {
 		when(registry.addInterceptor(any())).thenReturn(registration);
 
 		RateLimitInterceptor bean = new RateLimitInterceptor(
-				new RateLimitService(1, 1, 1, 1), "");
+				new RateLimitService(1, 1, 1, 1, 1), "");
 		new WebConfig(bean).addInterceptors(registry);
 
 		verify(registry).addInterceptor(bean);
 		verify(registration).addPathPatterns(
-				"/api/auth/login", "/api/auth/signup", "/api/bookings/**");
+				"/api/auth/login", "/api/auth/signup",
+				"/api/auth/resend-verification", "/api/bookings/**");
 	}
 }

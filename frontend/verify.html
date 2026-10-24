@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Verify email — Amoré</title>
+	<meta name="description" content="Verify the email address on your Amoré account so bookings and reviews stay yours." />
+	<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23E11D48'/%3E%3Cpath d='M9 24 L16 7 L23 24' fill='none' stroke='%23ffffff' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='16' cy='19.2' r='2.7' fill='%23ffffff'/%3E%3C/svg%3E" />
+	<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+	<a class="skip-link" href="#main">Skip to content</a>
+
+	<header class="site-header" data-header>
+		<div class="container header-inner">
+			<a class="brand" href="index.html" aria-label="Amoré — home">
+				<svg class="brand-mark" viewBox="0 0 32 32" width="34" height="34" aria-hidden="true" focusable="false">
+					<rect width="32" height="32" rx="8" fill="#E11D48"/>
+					<path d="M9 24 L16 7 L23 24" fill="none" stroke="#ffffff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+					<circle cx="16" cy="19.2" r="2.7" fill="#ffffff"/>
+				</svg>
+				<span class="brand-name">Amor<span class="brand-name-accent">é</span></span>
+			</a>
+
+			<nav class="site-nav" data-nav aria-label="Main navigation">
+				<ul>
+					<li><a href="index.html">Home</a></li>
+					<li><a href="services.html">Services</a></li>
+					<li><a href="stylists.html">Stylists</a></li>
+					<li><a href="about.html">About</a></li>
+					<li><a href="my-visits.html">My Visits</a></li>
+				</ul>
+				<a class="nav-signup" href="signup.html">Sign up</a>
+				<a class="btn btn-ghost nav-login" href="login.html">Log in</a>
+				<a class="btn btn-accent nav-cta" href="booking.html">Book now</a>
+			</nav>
+
+			<button class="nav-toggle" data-nav-toggle aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
+				<span></span><span></span>
+			</button>
+		</div>
+	</header>
+
+	<main id="main">
+		<section class="section">
+			<div class="container auth-wrap">
+
+				<p class="eyebrow reveal">Your account</p>
+				<h1 class="page-title reveal">Email verification</h1>
+				<p class="section-note reveal" data-verify-subject>Confirm your address to keep your bookings and reviews protected.</p>
+
+				<div class="booking-card">
+
+					<!-- PHASE 5: token mode — shown while the API call runs -->
+					<div class="auth-coming" data-verify-checking hidden>
+						<div class="auth-coming-icon" aria-hidden="true">✉</div>
+						<h2>Verifying your email…</h2>
+						<p class="booking-hint">One moment while we confirm your address.</p>
+					</div>
+
+					<!-- PHASE 5: token mode — success / failure result -->
+					<div class="auth-coming" data-verify-result hidden>
+						<div class="auth-coming-icon" aria-hidden="true" data-verify-icon>✉</div>
+						<h2 data-verify-title></h2>
+						<p class="booking-hint" data-verify-message></p>
+						<div class="btn-row">
+							<a class="btn btn-accent" href="login.html" data-verify-primary>Log in</a>
+							<a class="btn btn-ghost" href="index.html" data-verify-secondary>Back to home</a>
+						</div>
+					</div>
+
+					<!-- PHASE 5: pending mode — logged in, account not verified yet -->
+					<div class="auth-coming" data-verify-pending hidden>
+						<div class="auth-coming-icon" aria-hidden="true">✉</div>
+						<h2>Your email isn't verified yet</h2>
+						<p class="booking-hint" data-verify-pending-text></p>
+						<div class="btn-row">
+							<a class="btn btn-accent" href="index.html" data-verify-continue>Continue</a>
+						</div>
+					</div>
+
+					<!-- PHASE 5: no token, no session — honest instructions -->
+					<div class="auth-coming" data-verify-generic hidden>
+						<div class="auth-coming-icon" aria-hidden="true">✉</div>
+						<h2>Check your email</h2>
+						<p class="booking-hint">Open the verification link we sent you. It expires after 24 hours — if yours has run out, request a fresh one below.</p>
+					</div>
+
+					<!-- PHASE 5: shared resend form (pending / failure / generic) -->
+					<form data-resend-form novalidate hidden>
+						<div class="form-field">
+							<label for="resend-email">Email</label>
+							<input type="email" id="resend-email" name="email" autocomplete="email" maxlength="160" required data-resend-email aria-describedby="resend-email-error" />
+							<p class="field-error" id="resend-email-error" data-resend-error hidden></p>
+						</div>
+						<button class="btn btn-accent" type="submit" data-resend-submit>Send a new link</button>
+					</form>
+
+					<!-- Resend outcome (success OR error — same generic message either way) -->
+					<p class="field-hint" data-resend-status role="status" aria-live="polite" hidden></p>
+
+					<p class="auth-alt" data-verify-alt hidden>Already verified? <a href="login.html">Log in</a></p>
+
+					<!-- SR announcement for the token flow -->
+					<p class="visually-hidden" data-verify-status role="status" aria-live="polite"></p>
+
+				</div>
+			</div>
+		</section>
+	</main>
+
+	<footer class="site-footer">
+		<div class="container footer-inner">
+			<div class="footer-brand">
+				<a class="brand brand-light" href="index.html" aria-label="Amoré — home">
+					<svg class="brand-mark" viewBox="0 0 32 32" width="34" height="34" aria-hidden="true" focusable="false">
+						<rect width="32" height="32" rx="8" fill="#E11D48"/>
+						<path d="M9 24 L16 7 L23 24" fill="none" stroke="#ffffff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+						<circle cx="16" cy="19.2" r="2.7" fill="#ffffff"/>
+					</svg>
+					<span class="brand-name">Amor<span class="brand-name-accent">é</span></span>
+				</a>
+				<p class="footer-note">A unisex salon — cuts, colour and care for everyone.</p>
+			</div>
+			<nav class="footer-col" aria-label="Footer">
+				<p class="footer-heading">Explore</p>
+				<ul>
+					<li><a href="index.html">Home</a></li>
+					<li><a href="services.html">Services</a></li>
+					<li><a href="stylists.html">Stylists</a></li>
+					<li><a href="about.html">About</a></li>
+					<li><a href="my-visits.html">My Visits</a></li>
+				</ul>
+			</nav>
+			<div class="footer-col">
+				<p class="footer-heading">Salon</p>
+				<ul>
+					<li><a href="booking.html">Book an appointment</a></li>
+					<li><a href="index.html#reviews">Reviews</a></li>
+				</ul>
+			</div>
+			<p class="footer-legal">&copy; 2026 Amoré. All rights reserved.</p>
+		</div>
+	</footer>
+
+	<script src="js/api.js"></script>
+	<script src="js/main.js"></script>
+	<script src="js/verify.js"></script>
+</body>
+</html>

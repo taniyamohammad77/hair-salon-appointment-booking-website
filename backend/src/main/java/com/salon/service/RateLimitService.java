@@ -12,9 +12,9 @@ import com.salon.exception.ApiException;
 
 /**
  * SECURITY: per-client-IP fixed-window limiter for sensitive WRITE endpoints
- * (login / signup / booking mutations). In-memory, thread-safe, zero new
- * dependencies — right-sized for the local demo. A real deployment should
- * move the window map to a shared store (e.g. Redis).
+ * (login / signup / booking mutations / verification-email resend). In-memory,
+ * thread-safe, zero new dependencies — right-sized for the local demo. A real
+ * deployment should move the window map to a shared store (e.g. Redis).
  */
 @Service
 public class RateLimitService {
@@ -23,6 +23,7 @@ public class RateLimitService {
 	private final int signupPerMinute;
 	private final int bookingPerMinute;
 	private final int mutationPerMinute;
+	private final int resendPerMinute; // PHASE 5: verification-email dispatch
 	private final LongSupplier clock; // injectable so tests don't sleep 60s
 
 	private record Window(long epochMinute, int count) {}
@@ -40,19 +41,21 @@ public class RateLimitService {
 			@Value("${salon.rate-limit.login-per-minute:30}") int loginPerMinute,
 			@Value("${salon.rate-limit.signup-per-minute:10}") int signupPerMinute,
 			@Value("${salon.rate-limit.booking-per-minute:30}") int bookingPerMinute,
-			@Value("${salon.rate-limit.mutation-per-minute:30}") int mutationPerMinute) {
-		this(loginPerMinute, signupPerMinute, bookingPerMinute, mutationPerMinute,
+			@Value("${salon.rate-limit.mutation-per-minute:30}") int mutationPerMinute,
+			@Value("${salon.rate-limit.resend-per-minute:5}") int resendPerMinute) {
+		this(loginPerMinute, signupPerMinute, bookingPerMinute, mutationPerMinute, resendPerMinute,
 				System::currentTimeMillis);
 	}
 
 	/** Test hook (used by tests in BOTH com.salon.service and com.salon.config):
 	 *  injectable clock so window-rollover & forged-header tests never sleep. */
 	public RateLimitService(int loginPerMinute, int signupPerMinute, int bookingPerMinute,
-			int mutationPerMinute, LongSupplier clock) {
+			int mutationPerMinute, int resendPerMinute, LongSupplier clock) {
 		this.loginPerMinute = loginPerMinute;
 		this.signupPerMinute = signupPerMinute;
 		this.bookingPerMinute = bookingPerMinute;
 		this.mutationPerMinute = mutationPerMinute;
+		this.resendPerMinute = resendPerMinute;
 		this.clock = clock;
 	}
 
@@ -70,6 +73,12 @@ public class RateLimitService {
 
 	public void checkMutation(String ip) {
 		check("mutation", ip, mutationPerMinute);
+	}
+
+	/** PHASE 5: POST /api/auth/resend-verification — tight bucket because each
+	 *  allowed call attempts an email dispatch. */
+	public void checkResend(String ip) {
+		check("resend-verification", ip, resendPerMinute);
 	}
 
 	void check(String bucket, String ip, int limitPerMinute) {

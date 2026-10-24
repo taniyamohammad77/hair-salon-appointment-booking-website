@@ -260,6 +260,12 @@ BEGIN
         created_at     DATETIME2      NOT NULL
                        CONSTRAINT DF_users_created DEFAULT(SYSUTCDATETIME()),
 
+        /* PHASE 5: automated email verification — random single-use token
+           issued at signup, emailed as a link; NULL once verified or when
+           no verification is pending (legacy/manual accounts). */
+        verification_token NVARCHAR(64) NULL,
+        token_expiry_date  DATETIME2    NULL,
+
         CONSTRAINT UQ_users_email UNIQUE (email)
     );
 END;
@@ -279,6 +285,24 @@ BEGIN
 END;
 GO
 
+/* PHASE 5 migration: automated email verification replaces the manual
+   flag flip. A CSPRNG token (64 hex chars) is stored per unverified
+   signup with an expiry; GET /api/auth/verify consumes it and sets
+   email_verified = 1. Nullable: verified / legacy accounts have no token.
+   Guarded: safe to re-run. */
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.users') AND name = N'verification_token')
+BEGIN
+    ALTER TABLE dbo.users
+        ADD verification_token NVARCHAR(64) NULL;
+END;
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.users') AND name = N'token_expiry_date')
+BEGIN
+    ALTER TABLE dbo.users
+        ADD token_expiry_date DATETIME2 NULL;
+END;
+GO
+
 /* --------------------------------------------------------------------------
    9. COLUMN COMMENTS (extended properties) — self-documenting DB
    -------------------------------------------------------------------------- */
@@ -289,7 +313,7 @@ IF NOT EXISTS (SELECT 1 FROM sys.extended_properties WHERE major_id = OBJECT_ID(
     EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'Appointments. end_time computed by the backend (duration + buffer). Double-booking prevented by UQ_bookings_slot + app-layer overlap check.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'bookings';
 
 IF NOT EXISTS (SELECT 1 FROM sys.extended_properties WHERE major_id = OBJECT_ID(N'dbo.users') AND minor_id = 0 AND name = N'MS_Description')
-    EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'Customer accounts for authentication (auth Phase 1). Bookings link by email — no FK by design. password_hash = BCrypt; password policy (min 8 chars) is app-layer. email_verified gates legacy (pre-account) bookings until the salon verifies the address.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'users';
+    EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'Customer accounts for authentication (auth Phase 1). Bookings link by email — no FK by design. password_hash = BCrypt; password policy (min 8 chars) is app-layer. email_verified gates legacy (pre-account) bookings; Phase 5 sets it via the emailed verification token (verification_token + token_expiry_date, cleared on use).', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'users';
 GO
 
 PRINT N'SalonBooking schema ready.';

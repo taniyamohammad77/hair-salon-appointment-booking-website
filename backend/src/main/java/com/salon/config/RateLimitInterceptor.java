@@ -15,9 +15,10 @@ import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * SECURITY: routes sensitive WRITE endpoints through {@link RateLimitService}.
- * Registered in {@link WebConfig} for /api/auth/login, /api/auth/signup and
- * /api/bookings/**; the method checks below keep GET /api/bookings (My Visits)
- * and public catalogue/availability reads unlimited on purpose.
+ * Registered in {@link WebConfig} for /api/auth/login, /api/auth/signup,
+ * /api/auth/resend-verification and /api/bookings/**; the method checks below
+ * keep GET /api/bookings (My Visits) and public catalogue/availability reads
+ * unlimited on purpose.
  *
  * <p>SECURITY — client IP resolution: {@code X-Forwarded-For} is attacker
  * controlled, so it is honored ONLY when the direct TCP peer
@@ -66,6 +67,9 @@ public class RateLimitInterceptor implements HandlerInterceptor {
 		}
 		else if ("/api/auth/signup".equals(path)) {
 			rateLimiter.checkSignup(ip);
+		}
+		else if ("/api/auth/resend-verification".equals(path)) {
+			rateLimiter.checkResend(ip); // PHASE 5: verification-email dispatch
 		}
 		else if ("POST".equals(method)) {
 			rateLimiter.checkBooking(ip); // POST /api/bookings

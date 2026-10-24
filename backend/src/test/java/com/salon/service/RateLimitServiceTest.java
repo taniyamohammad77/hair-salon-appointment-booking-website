@@ -33,7 +33,7 @@ class RateLimitServiceTest {
 	@Test
 	void allowsUpToTheLimitThenBlocks429() {
 		AtomicLong clock = new AtomicLong(0);
-		RateLimitService limiter = new RateLimitService(2, 2, 2, 2, clock::get);
+		RateLimitService limiter = new RateLimitService(2, 2, 2, 2, 2, clock::get);
 
 		assertDoesNotThrow(() -> limiter.checkLogin(IP));
 		assertDoesNotThrow(() -> limiter.checkLogin(IP));
@@ -45,7 +45,7 @@ class RateLimitServiceTest {
 	@Test
 	void windowResetsInTheNextMinute() {
 		AtomicLong clock = new AtomicLong(0);
-		RateLimitService limiter = new RateLimitService(1, 1, 1, 1, clock::get);
+		RateLimitService limiter = new RateLimitService(1, 1, 1, 1, 1, clock::get);
 
 		assertDoesNotThrow(() -> limiter.checkLogin(IP));
 		assertThrows(ApiException.class, () -> limiter.checkLogin(IP));
@@ -57,7 +57,7 @@ class RateLimitServiceTest {
 	@Test
 	void bucketsAreIndependentPerIpAndEndpoint() {
 		AtomicLong clock = new AtomicLong(0);
-		RateLimitService limiter = new RateLimitService(1, 1, 1, 1, clock::get);
+		RateLimitService limiter = new RateLimitService(1, 1, 1, 1, 1, clock::get);
 
 		assertDoesNotThrow(() -> limiter.checkLogin(IP));
 		assertDoesNotThrow(() -> limiter.checkLogin("198.51.100.9")); // other IP unaffected
@@ -69,7 +69,7 @@ class RateLimitServiceTest {
 	@Test
 	void boundaryExactlyLimitPassesAndOneMoreIs429() {
 		AtomicLong clock = new AtomicLong(0);
-		RateLimitService limiter = new RateLimitService(3, 3, 3, 3, clock::get);
+		RateLimitService limiter = new RateLimitService(3, 3, 3, 3, 3, clock::get);
 
 		for (int i = 1; i <= 3; i++) {
 			assertDoesNotThrow(() -> limiter.checkLogin(IP), "request #" + i + " must pass");
@@ -85,7 +85,7 @@ class RateLimitServiceTest {
 	void concurrentRequestsAreCountedWithoutRace() throws Exception {
 		final int limit = 50, threads = 8, perThread = 25; // 200 attempts total
 		AtomicLong clock = new AtomicLong(0);
-		RateLimitService limiter = new RateLimitService(limit, limit, limit, limit, clock::get);
+		RateLimitService limiter = new RateLimitService(limit, limit, limit, limit, limit, clock::get);
 
 		ExecutorService pool = Executors.newFixedThreadPool(threads);
 		CountDownLatch startGate = new CountDownLatch(1);
@@ -125,7 +125,7 @@ class RateLimitServiceTest {
 	@Test
 	void fortyTwoNineIsGenericAndCarriesRetryAfterSeconds() {
 		AtomicLong clock = new AtomicLong(0);
-		RateLimitService limiter = new RateLimitService(1, 1, 1, 1, clock::get);
+		RateLimitService limiter = new RateLimitService(1, 1, 1, 1, 1, clock::get);
 
 		limiter.checkLogin(IP);
 		ApiException ex = assertThrows(ApiException.class, () -> limiter.checkLogin(IP));
@@ -146,7 +146,7 @@ class RateLimitServiceTest {
 	@Test
 	void staleWindowsAreSweptWithoutAnyLimitCrossing() {
 		AtomicLong clock = new AtomicLong(0);
-		RateLimitService limiter = new RateLimitService(10, 10, 10, 10, clock::get);
+		RateLimitService limiter = new RateLimitService(10, 10, 10, 10, 10, clock::get);
 
 		// three DIFFERENT windows at minute 0, all far below their limits
 		limiter.checkLogin("203.0.113.1");

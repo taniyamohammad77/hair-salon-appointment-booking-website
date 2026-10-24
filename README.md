@@ -14,16 +14,20 @@ Static frontend (HTML/CSS/JS)  →  REST API (Spring Boot)  →  JPA/Hibernate  
 
 Verified working locally: booking flow, authentication, booking ownership,
 the legacy-booking visibility gate (live-audited), **per-IP rate limiting**
-on login/signup/booking writes (30/10/30 per minute, trusted-proxy XFF guard,
-`Retry-After` on 429 — unit-verified), and the **reviews API — fully
+on login/signup/booking writes (30/10/30 + 5 resends per minute, trusted-proxy
+XFF guard, `Retry-After` on 429 — unit-verified), the **reviews API — fully
 implemented and verified** (public `GET /api/reviews` + authenticated
 `POST /api/reviews` over the hybrid completion rule: a visit is reviewable
 when it is CONFIRMED and has already ended, or was marked COMPLETED. The
 homepage renders real reviews with an honest empty state; My Visits posts
-them. Full suite: 84/84 green, 0 failures). **Not implemented — do
-not assume:** automated email-verification flow
-(the salon flips `users.email_verified` manually), HTTPS, production hosting,
-GitHub Pages serving.
+them), and **automated email verification — implemented and tested** (signup
+issues a 24-hour single-use token, `GET /api/auth/verify` consumes it,
+`POST /api/auth/resend-verification` rotates it behind a 5/min/IP limit.
+Without SMTP configured, links are written to the backend log — the dev
+fallback; set `spring.mail.*` for real delivery. Full suite: 102/102 green,
+0 failures). **Not implemented — do not assume:** HTTPS, production hosting,
+GitHub Pages serving, a configured SMTP provider (the flow runs in dev-log
+mode until one is set).
 
 ## Stack
 
@@ -108,13 +112,18 @@ All JSON under `/api`.
 
 | Method | Path | Purpose |
 |---|---|---|
-| POST | `/auth/signup` | create account (password min 8, BCrypt-hashed) |
-| POST | `/auth/login` | returns a 7-day HMAC-SHA256 bearer token |
+| POST | `/auth/signup` | create account (password min 8, BCrypt-hashed); issues + emails a verification token |
+| POST | `/auth/login` | returns a 7-day HMAC-SHA256 bearer token (`verified` flag included) |
 | GET | `/auth/me` | revalidate the current session |
+| GET | `/auth/verify?token=` | consume an emailed verification token (24 h, single-use); 400 on invalid/used/expired |
+| POST | `/auth/resend-verification` | rotate + resend the link (rate-limited 5/min/IP); always one generic message — no account enumeration |
 
 Send the token as `Authorization: Bearer <token>`. The frontend keeps it in
 `sessionStorage` and revalidates via `/me` on page loads. Login and signup
 errors are honest 401/400 responses; passwords are never echoed or logged.
+An unverified account can log in but is routed to `verify.html` (dedicated
+state page: status, resend form, honest error messages); a successful signup
+shows the "check your email" notice before continuing.
 
 ### Authenticated — bearer token required
 
@@ -134,9 +143,10 @@ errors are honest 401/400 responses; passwords are never echoed or logged.
   is deliberately generic: no booking data and no existence leak.
 - **Legacy gate (Phase 5A):** bookings created *before* an account existed
   are hidden from **unverified** accounts — they're filtered from the list,
-  and direct get/cancel/reschedule returns the same generic 403. The salon
-  flips `users.email_verified = 1` manually after verifying the person. A
-  user's own post-signup bookings are always visible.
+  and direct get/cancel/reschedule returns the same generic 403. Until
+  Phase 5 the salon flipped `users.email_verified = 1` manually; now the
+  emailed verification link (`GET /api/auth/verify`) sets it automatically.
+  A user's own post-signup bookings are always visible.
 
 **Errors:** 400 validation (+ `fields`), 404 unknown id, 409 slot already
 taken (frontend reloads slots) / review not open yet / booking already
@@ -202,12 +212,12 @@ backend/
 ├── scripts/schema.sql          ← documented DB schema (run once)
 ├── src/main/java/com/salon/
 │   ├── controller/  AuthController (/api/auth) · PublicController (everything else)
-│   ├── service/     Auth · Token · Availability · Booking · Catalogue
+│   ├── service/     Auth · Token · Verification · Availability · Booking · Catalogue
 │   ├── repository/  entity/  dto/  config/  exception/
 ├── src/main/resources/
 │   ├── application.yml         ← DB connection + ${AMORE_TOKEN_SECRET:}
 │   └── data.sql                ← idempotent seed (services/stylists/shifts)
-├── src/test/java/com/salon/    ← 84 tests (unit + integration)
+├── src/test/java/com/salon/    ← 102 tests (unit + integration)
 ├── run-dev.sh / run-dev.cmd    ← start with the correct JVM flags
 └── dev-tls12-legacy.security   ← dev-only TLS override
 start-frontend.cmd · serve-frontend.js · package.json   ← frontend dev server (:8081)
@@ -220,8 +230,9 @@ restricted to `localhost:*`, no HTTPS, secret from a local environment
 variable. A production launch would additionally require: a remote DB with
 `encrypt=true` + real credentials, HTTPS/TLS termination, the secret in a
 proper secret store, a shared rate-limit store for multiple instances
-(currently in-memory, single instance), an email-verification flow, and a
-hosting decision — **none of those exist yet**.
+(currently in-memory, single instance), an SMTP provider for verification
+mail (the flow works in dev-log mode; production needs `spring.mail.*`
+credentials), and a hosting decision — **none of those exist yet**.
 
 Design references: `ER-DIAGRAM.md` (schema + constraints + traps),
 `PHASE-1-DESIGN-PLAN.md` (phase plan).

@@ -40,6 +40,9 @@ salon:
     signup-per-minute: 10
     booking-per-minute: 30
     mutation-per-minute: 30
+    # PHASE 5 — resend-verification is an email dispatch (expensive + can be
+    # abused for mail-bombing), so it gets a TIGHT bucket: 5/min per IP.
+    resend-per-minute: 5
     # SECURITY — comma-separated IPs allowed to supply X-Forwarded-For.
     # Empty (local demo, no proxy in front) = the header is IGNORED and the
     # limiter keys on the real TCP peer, so clients cannot spoof their IP.
@@ -53,3 +56,14 @@ salon:
     token-secret: "${AMORE_TOKEN_SECRET:}"
     # 7 days — a booking horizon-sized session, no refresh-token machinery.
     token-ttl-minutes: 10080
+    # PHASE 5 — email-verification token lifetime (24 h). A single-use
+    # CSPRNG token issued at signup; consumed by GET /api/auth/verify.
+    verification-ttl-minutes: 1440
+
+  # PHASE 5 — email dispatch. SMTP is NOT configured by default: setting
+  # the standard spring.mail.* properties (e.g. SPRING_MAIL_HOST /
+  # SPRING_MAIL_USERNAME / SPRING_MAIL_PASSWORD env vars) switches the
+  # dispatch from the dev-log sender to real SMTP. The verify link points
+  # at the frontend page that calls the verify API.
+  mail:
+    verify-link-base-url: "${SALON_VERIFY_LINK_BASE_URL:http://localhost:8081/verify.html}"

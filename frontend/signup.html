@@ -52,11 +52,13 @@
 
 				<div class="booking-card">
 
-					<!-- PHASE 4: shown after a successful signup when the follow-up
-						auto-login could not complete (rare); auth.js retitles it -->
+					<!-- PHASE 4: shown after a successful signup (auto-login done —
+						auth.js retitles it); PHASE 5: data-panel-note carries the
+						"check your email" verification notice -->
 					<div class="auth-coming" data-coming-soon hidden>
 						<div class="auth-coming-icon" aria-hidden="true">✂</div>
 						<h2 id="signup-coming-title">Account created</h2>
+						<p class="booking-hint" data-panel-note hidden></p>
 						<p class="booking-hint" hidden>Your account is ready — log in to continue.</p>
 						<p class="booking-hint" hidden>This demo isn't connected to an account service yet.</p>
 						<div class="btn-row">

@@ -8,9 +8,15 @@
        session stored by api.js, then a REDIRECT to the "next" destination
        (login.html?next=<encoded> — set by the booking gate so deep links
        like ?service=&stylist= survive the round-trip; default index.html).
+       PHASE 5: a successful login for an UNVERIFIED account goes to
+       verify.html?pending=1&next=… (dedicated verification state — resend
+       link, honest error states) instead of the destination.
      - SIGNUP: success → confirmation panel (same card, no redesign) with a
        direct "Log in" link (no auto-login — the user then logs in and is
        returned to where they were headed via the same ?next= mechanism).
+       PHASE 5: after the established auto-login, the panel notifies
+       "Account created! Please check your email to verify your account
+       before booking/reviews." and offers Continue → ?next=.
        409 duplicate email → honest inline error.
    The old "coming soon" panel is gone from the submit path — this page can
    no longer pretend auth is unavailable. Passwords are never stored; the
@@ -198,14 +204,19 @@
 		}
 	}
 
-	function showComingPanel(message) {
+	function showComingPanel(message, note) {
 		form.querySelector("[data-password]").value = "";
 		if (confirmEl) { confirmEl.value = ""; }
-		// reuse the same card: swap the form for the (retitled) panel
+		// reuse the same card: swap the form for the (re)title(d) panel
 		var title = coming.querySelector("h2");
 		if (title) { title.textContent = message; }
 		var notes = coming.querySelectorAll(".booking-hint");
 		notes.forEach(function (p) { p.hidden = true; }); // demo wording is obsolete
+		// PHASE 5: optional extra note (the "check your email" notice)
+		if (note) {
+			var noteEl = coming.querySelector("[data-panel-note]");
+			if (noteEl) { noteEl.textContent = note; noteEl.hidden = false; }
+		}
 		form.hidden = true;
 		coming.hidden = false;
 		coming.setAttribute("tabindex", "-1");
@@ -244,8 +255,20 @@
 						form.querySelector("[data-password]").value = "";
 						if (confirmEl) { confirmEl.value = ""; }
 						if (lres.ok) {
-							announce("Account created and logged in as " + lres.data.email + ".");
-							window.location.replace(nextDestination());
+							// PHASE 5: notify BEFORE sending them on — the
+							// verification email is already on its way (or in
+							// the backend log in dev-mail mode). The session is
+							// established, so "Continue" resumes ?next= as before.
+							var notice = "Account created! Please check your email "
+									+ "to verify your account before booking/reviews.";
+							showComingPanel("Account created!", notice);
+							announce(notice);
+							var btns = coming.querySelectorAll(".btn-row .btn");
+							if (btns[0]) {
+								btns[0].textContent = "Continue";
+								btns[0].setAttribute("href", nextDestination());
+							}
+							if (btns[1]) { btns[1].hidden = true; } // no "book" CTA before verifying
 							return;
 						}
 						// rare (account exists but login hiccup) — honest panel
@@ -280,6 +303,15 @@
 			setBusy(false);
 			form.querySelector("[data-password]").value = ""; // never keep it around
 			if (res.ok) {
+				// PHASE 5: an UNVERIFIED account is sent to the dedicated
+				// verification page (resend + honest states) instead of
+				// straight on — ?next= rides along so nothing is lost.
+				if (res.data.verified === false) {
+					announce("Logged in — your email address still needs verification.");
+					window.location.replace("verify.html?pending=1&next="
+							+ encodeURIComponent(nextDestination()));
+					return;
+				}
 				announce("Logged in as " + res.data.email + ".");
 				window.location.replace(nextDestination()); // back to the intended flow
 				return;

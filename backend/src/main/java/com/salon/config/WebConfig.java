@@ -22,11 +22,13 @@ public class WebConfig implements WebMvcConfigurer {
 	}
 
 	/** SECURITY: rate-limit the sensitive WRITE endpoints only; public
-	 *  catalogue/availability reads and GET /api/bookings stay open. */
+	 *  catalogue/availability reads and GET /api/bookings stay open.
+	 *  PHASE 5: resend-verification dispatches email → limited too. */
 	@Override
 	public void addInterceptors(InterceptorRegistry registry) {
 		registry.addInterceptor(rateLimitInterceptor)
-				.addPathPatterns("/api/auth/login", "/api/auth/signup", "/api/bookings/**");
+				.addPathPatterns("/api/auth/login", "/api/auth/signup",
+						"/api/auth/resend-verification", "/api/bookings/**");
 	}
 
 	@Override
